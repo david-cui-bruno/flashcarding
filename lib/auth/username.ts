@@ -5,8 +5,10 @@ export function usernameToEmail(username: string): string {
 }
 
 // Letters, digits, underscore, hyphen; 3–30 chars. Kept in sync with the `pattern`
-// attribute on the signup form so client and server agree.
-export const USERNAME_PATTERN = "^[A-Za-z0-9_-]{3,30}$";
+// attribute on the signup form so client and server agree. The hyphen is escaped so the
+// string is valid both as `new RegExp(...)` and as the HTML pattern attribute, which modern
+// Chromium compiles with the unicodeSets (`v`) flag — an unescaped `-` in a class throws there.
+export const USERNAME_PATTERN = "^[A-Za-z0-9_\\-]{3,30}$";
 const USERNAME_RE = new RegExp(USERNAME_PATTERN);
 export const PASSWORD_MIN_LENGTH = 8;
 
