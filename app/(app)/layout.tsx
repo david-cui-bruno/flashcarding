@@ -28,6 +28,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Link href="/study" className="text-neutral-600 hover:text-black">
           Study
         </Link>
+        <Link href="/metrics" className="text-neutral-600 hover:text-black">
+          Metrics
+        </Link>
         <Link href="/settings" className="text-neutral-600 hover:text-black">
           Settings
         </Link>

@@ -2,6 +2,24 @@
 
 import { createClient } from "@/lib/supabase/server";
 
+// Spot-check / trust modes (docs/METRICS.md): cards the user is NOT asked to review go
+// straight into the deck. Crucially, NO generation_feedback row is logged for them — they
+// weren't reviewed, so they must not move the edit rate (the "sampled" edit rate is only
+// over cards the user actually saw). Idempotent: only touches still-pending cards.
+export async function autoAcceptCards(cardIds: string[]): Promise<void> {
+  if (cardIds.length === 0) return;
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase
+    .from("cards")
+    .update({ review_status: "accepted" })
+    .in("id", cardIds)
+    .eq("review_status", "pending");
+}
+
 export async function keepCard(cardId: string): Promise<void> {
   const supabase = await createClient();
   const {
