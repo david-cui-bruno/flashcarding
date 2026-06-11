@@ -2,10 +2,15 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { generateCards } from "@/lib/generation/generate";
+import { submitGenerationBatch } from "@/lib/generation/submit";
+import { selectFewShotExamples } from "@/lib/feedback/select-examples";
 
 type GenState = { error: string } | null;
 
+// Kicks off ASYNCHRONOUS generation (docs/PIPELINE.md, ARCHITECTURE "Batch
+// API"): persist the source, create a generation_jobs row, submit the batch,
+// and hand off to the job page where the client subscribes via Realtime. No
+// blocking on the model — the user comes back to a finished deck.
 export async function generateFromText(
   _prev: GenState,
   formData: FormData,
@@ -21,7 +26,7 @@ export async function generateFromText(
 
   const title = text.split("\n")[0].slice(0, 80) || "Pasted text";
 
-  // 1. Persist the source (kept for grounding / provenance — see docs/PIPELINE.md).
+  // 1. Persist the source (retained for grounding / provenance — PIPELINE).
   const { data: source, error: srcErr } = await supabase
     .from("sources")
     .insert({ user_id: user.id, kind: "paste", title, content: text })
@@ -29,41 +34,39 @@ export async function generateFromText(
     .single();
   if (srcErr || !source) return { error: srcErr?.message ?? "Could not save source." };
 
-  // 2. Generate (skeleton: one synchronous Sonnet call; production = async Batch).
-  let generated;
-  try {
-    generated = await generateCards(text);
-  } catch (e) {
-    return {
-      error: "Generation failed: " + (e instanceof Error ? e.message : "unknown error"),
-    };
-  }
-  if (generated.length === 0) {
-    return { error: "No cards were generated from that text." };
-  }
-
-  // 3. One collection per run, named after the source (cards reassignable later).
-  const { data: collection, error: colErr } = await supabase
-    .from("collections")
-    .insert({ user_id: user.id, name: title })
+  // 2. Create the job row up front so the client has something to subscribe to,
+  //    even if submission fails.
+  const { data: job, error: jobErr } = await supabase
+    .from("generation_jobs")
+    .insert({ user_id: user.id, source_id: source.id, status: "queued" })
     .select("id")
     .single();
-  if (colErr || !collection) {
-    return { error: colErr?.message ?? "Could not create collection." };
+  if (jobErr || !job) return { error: jobErr?.message ?? "Could not start generation." };
+
+  // 3. Submit the batch (chunk → extract→draft per chunk). The user's past
+  //    review actions tune the prompt as dynamic few-shot examples.
+  try {
+    const examples = await selectFewShotExamples({ userId: user.id, sourceText: text });
+    const submitted = await submitGenerationBatch(text, examples);
+    if (!submitted) throw new Error("Source produced no content to generate from.");
+
+    await supabase
+      .from("generation_jobs")
+      .update({ status: "running", anthropic_batch_id: submitted.batchId })
+      .eq("id", job.id);
+  } catch (e) {
+    await supabase
+      .from("generation_jobs")
+      .update({
+        status: "failed",
+        error: "Could not submit generation: " +
+          (e instanceof Error ? e.message : "unknown error"),
+      })
+      .eq("id", job.id);
+    // Still hand off to the job page, which surfaces the failure.
   }
 
-  // 4. Insert cards as pending, awaiting review.
-  const rows = generated.map((c) => ({
-    user_id: user.id,
-    collection_id: collection.id,
-    source_id: source.id,
-    term: c.term,
-    definition: c.definition,
-    source_span: c.source_span,
-    review_status: "pending" as const,
-  }));
-  const { error: cardsErr } = await supabase.from("cards").insert(rows);
-  if (cardsErr) return { error: cardsErr.message };
-
-  redirect("/review");
+  // 4. Hand off to the job's live status page (must be outside try/catch —
+  //    redirect() throws a control-flow signal that has to propagate).
+  redirect(`/new/${job.id}`);
 }
