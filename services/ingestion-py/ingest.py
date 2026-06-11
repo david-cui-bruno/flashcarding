@@ -34,8 +34,17 @@ import json
 import os
 import sys
 import tempfile
+import threading
 
 SUPPORTED_EXTENSIONS = {"pdf", "docx"}
+
+# Docling loads a layout + table-structure model into memory. In the long-lived HTTP service
+# we build the converter ONCE and reuse it: rebuilding per request both wastes time and causes
+# memory spikes (two models briefly resident) that OOM a small container. The lock serializes
+# Docling so a single worker never holds two models at once. (In the one-shot CLI this is just
+# a per-process build + a no-op lock.)
+_docling_converter = None
+_docling_lock = threading.Lock()
 
 # Below this many non-whitespace characters of extracted text, we treat the
 # MarkItDown result as a failed/low-yield extraction (scanned, image-only, or
@@ -69,26 +78,28 @@ def _run_docling(path: str) -> str:
     buffers stay bounded on large documents. On a fresh machine Docling may
     download layout/OCR model weights on first use (needs network once).
     """
+    global _docling_converter
     import logging
 
     logging.getLogger().setLevel(logging.ERROR)
     for name in ("docling", "transformers", "RapidOCR", "huggingface_hub"):
         logging.getLogger(name).setLevel(logging.ERROR)
 
-    from docling.datamodel.base_models import InputFormat
-    from docling.datamodel.pipeline_options import PdfPipelineOptions
-    from docling.document_converter import DocumentConverter, PdfFormatOption
+    with _docling_lock:
+        if _docling_converter is None:
+            from docling.datamodel.base_models import InputFormat
+            from docling.datamodel.pipeline_options import PdfPipelineOptions
+            from docling.document_converter import DocumentConverter, PdfFormatOption
 
-    # OCR off: digital PDFs don't need it, and the OCR models (RapidOCR) add significant
-    # memory — enough to OOM a small CPU-only container. Layout + table-structure recognition
-    # (the reason we use Docling) still run. Scanned/image-only PDFs won't get text extracted,
-    # which is an acceptable v1 tradeoff (MarkItDown can't OCR either).
-    pdf_opts = PdfPipelineOptions()
-    pdf_opts.do_ocr = False
-    converter = DocumentConverter(
-        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_opts)}
-    )
-    result = converter.convert(path)
+            # OCR off: digital PDFs don't need it, and the OCR models (RapidOCR) add significant
+            # memory. Layout + table-structure recognition (why we use Docling) still run.
+            # Scanned/image-only PDFs won't get text extracted — an acceptable v1 tradeoff.
+            pdf_opts = PdfPipelineOptions()
+            pdf_opts.do_ocr = False
+            _docling_converter = DocumentConverter(
+                format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_opts)}
+            )
+        result = _docling_converter.convert(path)
     return result.document.export_to_markdown() or ""
 
 
