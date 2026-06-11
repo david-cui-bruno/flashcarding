@@ -12,6 +12,12 @@ dependencies = [
     # Docling is the structurally-complex (tables/multi-column) fallback.
     "markitdown[docx,pdf]>=0.1.1",
     "docling>=2.0.0",
+    # Pin torch/torchvision explicitly so the CPU-only index below applies. Docling drags in
+    # torch; the default Linux wheel bundles multi-GB CUDA libs (nvidia-*) that are useless on
+    # Railway (no GPU) and bloat the image to ~6-7GB. CPU wheels cut it to ~1.5GB. Inference
+    # runs on CPU either way.
+    "torch>=2.2",
+    "torchvision>=0.17",
     # HTTP service (server.py) for deploying ingestion on its own (e.g. Railway).
     # Local dev can ignore these (the Node adapter spawns the CLI instead).
     "fastapi>=0.115",
@@ -30,3 +36,13 @@ dev = [
 [tool.uv]
 # Keep the heavy Docling/torch resolution reproducible.
 package = false
+
+# Force CPU-only torch/torchvision from PyTorch's CPU wheel index (no CUDA).
+[tool.uv.sources]
+torch = [{ index = "pytorch-cpu" }]
+torchvision = [{ index = "pytorch-cpu" }]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
