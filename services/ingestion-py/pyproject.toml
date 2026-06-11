@@ -1,0 +1,27 @@
+[project]
+name = "carding-ingestion"
+version = "0.1.0"
+description = "Carding document ingestion sidecar: PDF/DOCX bytes -> clean markdown."
+readme = "README.md"
+# MarkItDown needs >=3.10; Docling/torch wheels are not yet published for 3.14,
+# so we pin to 3.12 (broadest wheel coverage). See README.
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    # MIT-licensed parsers, chosen over Reducto/LlamaParse (paid) and AGPL
+    # PyMuPDF4LLM — see docs/ARCHITECTURE.md. MarkItDown is the fast path;
+    # Docling is the structurally-complex (tables/multi-column) fallback.
+    "markitdown[docx,pdf]>=0.1.1",
+    "docling>=2.0.0",
+]
+
+[dependency-groups]
+# Only needed to author the PDF/DOCX test fixtures (make_fixtures.py). Not a
+# runtime dependency of the sidecar.
+dev = [
+    "reportlab>=4.0",
+    "python-docx>=1.1",
+]
+
+[tool.uv]
+# Keep the heavy Docling/torch resolution reproducible.
+package = false
