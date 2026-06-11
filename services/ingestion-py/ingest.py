@@ -75,9 +75,19 @@ def _run_docling(path: str) -> str:
     for name in ("docling", "transformers", "RapidOCR", "huggingface_hub"):
         logging.getLogger(name).setLevel(logging.ERROR)
 
-    from docling.document_converter import DocumentConverter
+    from docling.datamodel.base_models import InputFormat
+    from docling.datamodel.pipeline_options import PdfPipelineOptions
+    from docling.document_converter import DocumentConverter, PdfFormatOption
 
-    converter = DocumentConverter()
+    # OCR off: digital PDFs don't need it, and the OCR models (RapidOCR) add significant
+    # memory — enough to OOM a small CPU-only container. Layout + table-structure recognition
+    # (the reason we use Docling) still run. Scanned/image-only PDFs won't get text extracted,
+    # which is an acceptable v1 tradeoff (MarkItDown can't OCR either).
+    pdf_opts = PdfPipelineOptions()
+    pdf_opts.do_ocr = False
+    converter = DocumentConverter(
+        format_options={InputFormat.PDF: PdfFormatOption(pipeline_options=pdf_opts)}
+    )
     result = converter.convert(path)
     return result.document.export_to_markdown() or ""
 
