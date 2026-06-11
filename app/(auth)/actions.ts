@@ -3,7 +3,11 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { usernameToEmail } from "@/lib/auth/username";
+import {
+  usernameToEmail,
+  validateUsername,
+  PASSWORD_MIN_LENGTH,
+} from "@/lib/auth/username";
 import type { AuthState } from "@/lib/auth/types";
 
 export async function login(_prev: AuthState, formData: FormData): Promise<AuthState> {
@@ -16,20 +20,26 @@ export async function login(_prev: AuthState, formData: FormData): Promise<AuthS
     email: usernameToEmail(username),
     password,
   });
+  // Don't leak which half was wrong.
   if (error) return { error: "Invalid username or password." };
+
   redirect("/library");
 }
 
 export async function signup(_prev: AuthState, formData: FormData): Promise<AuthState> {
   const username = String(formData.get("username") ?? "").trim();
   const password = String(formData.get("password") ?? "");
-  if (!username || !password) return { error: "Username and password are required." };
-  if (password.length < 8) return { error: "Password must be at least 8 characters." };
+
+  const usernameError = validateUsername(username);
+  if (usernameError) return { error: usernameError };
+  if (password.length < PASSWORD_MIN_LENGTH) {
+    return { error: `Password must be at least ${PASSWORD_MIN_LENGTH} characters.` };
+  }
 
   const email = usernameToEmail(username);
   const admin = createAdminClient();
 
-  // Create the user pre-confirmed (no email inbox for the synthetic address).
+  // Create the user pre-confirmed (no inbox for the synthetic address).
   const { data, error } = await admin.auth.admin.createUser({
     email,
     password,
@@ -37,14 +47,26 @@ export async function signup(_prev: AuthState, formData: FormData): Promise<Auth
     user_metadata: { username },
   });
   if (error || !data.user) {
-    return { error: error?.message ?? "Could not create account (username may be taken)." };
+    const taken = /already|exist|registered|duplicate/i.test(error?.message ?? "");
+    return { error: taken ? "That username is taken." : "Could not create account. Try again." };
   }
 
-  await admin.from("profiles").insert({ id: data.user.id, username });
+  // Mirror the username into profiles. If this fails, roll back the auth user so we
+  // never leave a half-created account that can sign in but has no profile row.
+  const { error: profileError } = await admin
+    .from("profiles")
+    .insert({ id: data.user.id, username });
+  if (profileError) {
+    await admin.auth.admin.deleteUser(data.user.id);
+    const taken = /duplicate|unique|exist/i.test(profileError.message);
+    return { error: taken ? "That username is taken." : "Could not create account. Try again." };
+  }
 
   const supabase = await createClient();
   const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
-  if (signInError) return { error: signInError.message };
+  // Account exists at this point; if auto sign-in fails, send them to log in.
+  if (signInError) return { error: "Account created — please log in." };
+
   redirect("/library");
 }
 

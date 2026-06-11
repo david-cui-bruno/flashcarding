@@ -33,8 +33,16 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path === "/login" || path === "/signup";
+  // Public to the proxy: PWA assets must load before sign-in (or the app isn't
+  // installable), and the reminder cron authenticates itself via CRON_SECRET.
+  const isPublic =
+    isAuthRoute ||
+    path === "/sw.js" ||
+    path === "/manifest.webmanifest" ||
+    path.startsWith("/icons/") ||
+    path.startsWith("/api/cron/");
 
-  if (!user && !isAuthRoute) {
+  if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

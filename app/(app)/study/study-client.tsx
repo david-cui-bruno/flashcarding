@@ -1,38 +1,117 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { gradeCard } from "./actions";
+import { gradeCard, flagBadCard } from "./actions";
+import { isLeech } from "@/lib/scheduling/leech";
 
-type DueCard = {
+export type StudyCard = {
   id: string;
   term: string;
   definition: string;
   source_span: string | null;
+  prompt_direction: "definition_to_term" | "term_to_definition";
+  lapses: number;
+  fsrs_state: "new" | "learning" | "review" | "relearning";
 };
 
-const LABELS = ["", "Again", "Hard", "Good", "Easy"];
+type Mode = "scheduled" | "cram";
 
-export function StudyClient({ cards }: { cards: DueCard[] }) {
+// 1–4 Anki grades. Colour runs cold→warm so the keys are learnable at a glance.
+const GRADES = [
+  { g: 1, label: "Again", cls: "border-red-300 text-red-700 hover:bg-red-50" },
+  { g: 2, label: "Hard", cls: "border-orange-300 text-orange-700 hover:bg-orange-50" },
+  { g: 3, label: "Good", cls: "border-green-300 text-green-700 hover:bg-green-50" },
+  { g: 4, label: "Easy", cls: "border-blue-300 text-blue-700 hover:bg-blue-50" },
+] as const;
+
+const STATE_LABEL: Record<StudyCard["fsrs_state"], string> = {
+  new: "New",
+  learning: "Learning",
+  review: "Review",
+  relearning: "Relearning",
+};
+
+// Default direction is fact → term (docs/CARD-QUALITY.md): prompt with the definition,
+// recall the term. A per-card flip (term_to_definition) shows the term and recalls the fact.
+function faces(card: StudyCard): { prompt: string; answer: string } {
+  return card.prompt_direction === "term_to_definition"
+    ? { prompt: card.term, answer: card.definition }
+    : { prompt: card.definition, answer: card.term };
+}
+
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+export function ModeTabs({ mode }: { mode: Mode }) {
+  const tab = (active: boolean) =>
+    `rounded-full px-3 py-1 text-sm transition ${
+      active ? "bg-black text-white" : "border text-neutral-600 hover:text-black"
+    }`;
+  return (
+    <div className="flex gap-2">
+      <Link href="/study" className={tab(mode === "scheduled")}>
+        Due today
+      </Link>
+      <Link href="/study?mode=cram" className={tab(mode === "cram")}>
+        Cram
+      </Link>
+    </div>
+  );
+}
+
+export function StudyClient({ cards, mode }: { cards: StudyCard[]; mode: Mode }) {
+  // Cram is a free pass over the deck — shuffle once so repeat sessions vary. Scheduled
+  // keeps FSRS's due-order. Either way the queue is fixed for the life of the session.
+  const queue = useMemo(() => (mode === "cram" ? shuffle(cards) : cards), [cards, mode]);
+
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [reviewed, setReviewed] = useState(0);
+  // One bad-card flow: `flagging` reveals the reason box; `reason` feeds the generator.
+  const [flagging, setFlagging] = useState(false);
+  const [reason, setReason] = useState("");
 
-  const card = i < cards.length ? cards[i] : null;
+  const card = i < queue.length ? queue[i] : null;
+  // A leech is *surfaced* to the user (banner) — never auto-flagged. See flagBadCard().
+  const leech = card ? isLeech(card) : false;
+
+  const advance = useCallback(() => {
+    setShown(false);
+    setFlagging(false);
+    setReason("");
+    setI((n) => n + 1);
+  }, []);
 
   const grade = useCallback(
     async (g: 1 | 2 | 3 | 4) => {
       if (!card || busy) return;
       setBusy(true);
-      await gradeCard(card.id, g);
+      // In cram this records the review but never reschedules (docs/SCHEDULING.md).
+      await gradeCard(card.id, g, mode);
+      setReviewed((n) => n + 1);
       setBusy(false);
-      setShown(false);
-      setI((n) => n + 1);
+      advance();
     },
-    [card, busy],
+    [card, busy, mode, advance],
   );
 
-  // Anki-style controls: space flips, 1–4 grade once the answer is shown.
+  const flagBad = useCallback(async () => {
+    if (!card || busy) return;
+    setBusy(true);
+    await flagBadCard(card.id, reason);
+    setBusy(false);
+    advance();
+  }, [card, busy, reason, advance]);
+
+  // Anki controls: space flips, 1–4 grade once the answer is shown.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (!card) return;
@@ -40,6 +119,7 @@ export function StudyClient({ cards }: { cards: DueCard[] }) {
         e.preventDefault();
         setShown((s) => !s);
       } else if (shown && ["1", "2", "3", "4"].includes(e.key)) {
+        e.preventDefault();
         void grade(Number(e.key) as 1 | 2 | 3 | 4);
       }
     };
@@ -49,47 +129,152 @@ export function StudyClient({ cards }: { cards: DueCard[] }) {
 
   if (!card) {
     return (
-      <div className="space-y-3">
-        <p>Done for now 🎉</p>
-        <Link href="/library" className="underline">
-          Back to library
-        </Link>
+      <div className="space-y-4">
+        <ModeTabs mode={mode} />
+        <div className="rounded border p-6 text-center">
+          <p className="text-lg">Done for now 🎉</p>
+          <p className="mt-1 text-sm text-neutral-500">
+            {reviewed} card{reviewed === 1 ? "" : "s"} reviewed
+            {mode === "cram" ? " · schedule untouched" : ""}.
+          </p>
+        </div>
+        <div className="flex gap-3 text-sm">
+          {mode === "scheduled" ? (
+            <Link href="/study?mode=cram" className="underline">
+              Cram more
+            </Link>
+          ) : (
+            <Link href="/study" className="underline">
+              Back to due cards
+            </Link>
+          )}
+          <Link href="/library" className="underline">
+            Library
+          </Link>
+        </div>
       </div>
     );
   }
 
+  const { prompt, answer } = faces(card);
+  const progress = Math.round((i / queue.length) * 100);
+
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-neutral-500">
-        {i + 1} / {cards.length} · space to flip · 1–4 to grade
-      </p>
-      {/* Default direction is fact → term (docs/CARD-QUALITY.md): the definition is the prompt. */}
-      <div className="min-h-40 rounded border p-6 text-center">
-        <div className="text-lg">{card.definition}</div>
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <ModeTabs mode={mode} />
+        <span className="text-sm text-neutral-500">
+          {i + 1} / {queue.length}
+        </span>
+      </div>
+
+      <div className="h-1 w-full overflow-hidden rounded-full bg-neutral-200">
+        <div
+          className="h-full bg-black transition-all"
+          style={{ width: `${progress}%` }}
+        />
+      </div>
+
+      {leech && !flagging && (
+        <div className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
+          ⚠️ You&rsquo;ve missed this {card.lapses} times. Leeches are usually a sign the{" "}
+          <em>card</em> is the problem — ambiguous, miscued, or wrong.{" "}
+          <button
+            onClick={() => setFlagging(true)}
+            disabled={busy}
+            className="font-medium underline disabled:opacity-50"
+          >
+            Flag as a bad card
+          </button>
+          .
+        </div>
+      )}
+
+      <div className="min-h-40 rounded-lg border p-6 text-center">
+        <div className="mb-3 flex items-center justify-center gap-2 text-xs text-neutral-400">
+          <span className="rounded-full bg-neutral-100 px-2 py-0.5">
+            {STATE_LABEL[card.fsrs_state]}
+          </span>
+          {mode === "cram" && (
+            <span className="rounded-full bg-neutral-100 px-2 py-0.5">
+              won&rsquo;t reschedule
+            </span>
+          )}
+        </div>
+        <div className="text-lg">{prompt}</div>
         {shown && (
-          <div className="mt-4 border-t pt-4 text-xl font-semibold">{card.term}</div>
+          <div className="mt-4 border-t pt-4 text-xl font-semibold">{answer}</div>
+        )}
+        {shown && card.source_span && (
+          <div className="mt-4 border-l-2 pl-3 text-left text-sm text-neutral-400">
+            &ldquo;{card.source_span}&rdquo;
+          </div>
         )}
       </div>
+
       {!shown ? (
         <button
           onClick={() => setShown(true)}
-          className="w-full rounded bg-black py-2 text-white"
+          className="w-full rounded bg-black py-2.5 text-white"
         >
-          Show answer (space)
+          Show answer{" "}
+          <kbd className="rounded bg-white/20 px-1.5 py-0.5 text-xs">space</kbd>
         </button>
       ) : (
         <div className="grid grid-cols-4 gap-2">
-          {[1, 2, 3, 4].map((g) => (
+          {GRADES.map(({ g, label, cls }) => (
             <button
               key={g}
               disabled={busy}
               onClick={() => grade(g as 1 | 2 | 3 | 4)}
-              className="rounded border py-2 text-sm disabled:opacity-50"
+              className={`flex flex-col items-center rounded border py-2 text-sm disabled:opacity-50 ${cls}`}
             >
-              {g}. {LABELS[g]}
+              <span className="font-medium">{label}</span>
+              <span className="text-xs opacity-60">{g}</span>
             </button>
           ))}
         </div>
+      )}
+
+      {/* The single, user-initiated "this card is bad" path — removes the card and feeds the
+          quality loop (docs/METRICS.md). A leech only opens this; it never auto-submits. */}
+      {flagging ? (
+        <div className="space-y-2 rounded border border-red-200 p-3">
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={2}
+            placeholder="What's wrong with it? (optional — feeds the generator)"
+            className="w-full rounded border px-2 py-1 text-sm"
+          />
+          <div className="flex gap-2">
+            <button
+              disabled={busy}
+              onClick={flagBad}
+              className="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              Remove this card
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => {
+                setFlagging(false);
+                setReason("");
+              }}
+              className="rounded border px-3 py-1.5 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          disabled={busy}
+          onClick={() => setFlagging(true)}
+          className="text-xs text-neutral-400 underline hover:text-red-600 disabled:opacity-50"
+        >
+          ⚑ This card is bad
+        </button>
       )}
     </div>
   );

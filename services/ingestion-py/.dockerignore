@@ -1,0 +1,8 @@
+# The local uv venv (huge — rebuilt in the image) and test fixtures (binary) never ship.
+.venv
+fixtures
+__pycache__
+*.pyc
+.python-version
+make_fixtures.py
+README.md
