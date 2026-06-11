@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { submitGenerationBatch } from "@/lib/generation/submit";
-import { selectFewShotExamples } from "@/lib/feedback/select-examples";
+import { selectFewShotExamples } from "@/lib/feedback";
 
 type GenState = { error: string } | null;
 
@@ -46,7 +46,11 @@ export async function generateFromText(
   // 3. Submit the batch (chunk → extract→draft per chunk). The user's past
   //    review actions tune the prompt as dynamic few-shot examples.
   try {
-    const examples = await selectFewShotExamples({ userId: user.id, sourceText: text });
+    const examples = await selectFewShotExamples({
+      client: supabase,
+      userId: user.id,
+      sourceText: text,
+    });
     const submitted = await submitGenerationBatch(text, examples);
     if (!submitted) throw new Error("Source produced no content to generate from.");
 

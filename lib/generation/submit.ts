@@ -19,7 +19,7 @@ import type Anthropic from "@anthropic-ai/sdk";
 import { getAnthropic, GENERATION_MODEL } from "./anthropic";
 import { chunkSource } from "./chunk";
 import { CARD_GENERATION_SYSTEM, CARD_SCHEMA, renderFewShotBlock } from "./prompt";
-import type { FewShotExample } from "@/lib/feedback/select-examples";
+import type { FewShotExample } from "@/lib/feedback";
 
 // custom_id prefix so batch results can be traced back to their chunk.
 const CHUNK_PREFIX = "chunk-";

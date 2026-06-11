@@ -3,7 +3,7 @@
 // generation prompt, the grounding check (lib/generation/gates.ts), and the
 // eval rubric (see CLAUDE.md). Change card quality there, not here.
 
-import type { FewShotExample } from "@/lib/feedback/select-examples";
+import type { FewShotExample } from "@/lib/feedback";
 
 export const CARD_GENERATION_SYSTEM = `You generate atomic flashcards from a source text for a power-memorizer who studies with spaced repetition. Follow these rules exactly.
 
@@ -75,9 +75,12 @@ export const CARD_SCHEMA = {
 export function renderFewShotBlock(examples: FewShotExample[]): string {
   if (examples.length === 0) return "";
 
+  // Canonical FewShotExample (lib/feedback): top-level term/definition is the kept/AFTER
+  // text; `before` holds the model's original for edits (null for kept). Only kept/edited
+  // are injected — the rejected-examples ("avoid cards like these") idea is a possible
+  // future contract extension, pending human sign-off, not in v1.
   const kept = examples.filter((e) => e.kind === "kept");
-  const edited = examples.filter((e) => e.kind === "edited");
-  const rejected = examples.filter((e) => e.kind === "rejected");
+  const edited = examples.filter((e) => e.kind === "edited" && e.before);
 
   const lines: string[] = [
     "",
@@ -93,17 +96,10 @@ export function renderFewShotBlock(examples: FewShotExample[]): string {
       "Cards this user rewrote (prefer the AFTER style — this is the strongest signal):",
     );
     for (const e of edited) {
+      if (!e.before) continue;
       lines.push(
         `  • BEFORE: ${e.before.term} → ${e.before.definition}` +
-          `\n    AFTER:  ${e.after.term} → ${e.after.definition}`,
-      );
-    }
-  }
-  if (rejected.length) {
-    lines.push("Cards this user rejected (avoid making cards like these):");
-    for (const e of rejected) {
-      lines.push(
-        `  • ${e.term} → ${e.definition}${e.reason ? ` (reason: ${e.reason})` : ""}`,
+          `\n    AFTER:  ${e.term} → ${e.definition}`,
       );
     }
   }
