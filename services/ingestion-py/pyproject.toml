@@ -12,6 +12,11 @@ dependencies = [
     # Docling is the structurally-complex (tables/multi-column) fallback.
     "markitdown[docx,pdf]>=0.1.1",
     "docling>=2.0.0",
+    # HTTP service (server.py) for deploying ingestion on its own (e.g. Railway).
+    # Local dev can ignore these (the Node adapter spawns the CLI instead).
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "python-multipart>=0.0.9",
 ]
 
 [dependency-groups]

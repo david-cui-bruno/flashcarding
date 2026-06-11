@@ -59,11 +59,15 @@ function resolvePython(): string {
 }
 
 /**
- * Convert document bytes to clean markdown via the Python sidecar.
+ * Convert document bytes to clean markdown. Two interchangeable backends, same contract:
+ *  - INGESTION_SERVICE_URL set → POST to the deployed ingestion service
+ *    (services/ingestion-py on e.g. Railway). Production path.
+ *  - otherwise → spawn the local Python CLI (needs `uv sync` in services/ingestion-py).
+ *    Dev path.
  *
- * @throws if the file type is unsupported, the sidecar can't be started, it
- *         times out, or parsing fails. Callers (server actions) translate these
- *         into user-facing messages.
+ * @throws if the file type is unsupported, the backend can't be reached/started, it
+ *         times out, or parsing fails. Callers (server actions) translate these into
+ *         user-facing messages.
  */
 export async function parseToMarkdown(
   bytes: Buffer | Uint8Array,
@@ -77,6 +81,69 @@ export async function parseToMarkdown(
 
   const mode: ParseMode = opts.mode ?? "auto";
   const timeoutMs = opts.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+
+  if (process.env.INGESTION_SERVICE_URL) {
+    return parseViaService(bytes, filename, mode, timeoutMs);
+  }
+  return parseViaSubprocess(bytes, filename, mode, timeoutMs);
+}
+
+/** Production path: call the deployed ingestion HTTP service (e.g. Railway). */
+async function parseViaService(
+  bytes: Buffer | Uint8Array,
+  filename: string,
+  mode: ParseMode,
+  timeoutMs: number,
+): Promise<ParseResult> {
+  const base = process.env.INGESTION_SERVICE_URL!.replace(/\/+$/, "");
+  const token = process.env.INGESTION_SERVICE_TOKEN;
+
+  const form = new FormData();
+  form.append("file", new Blob([new Uint8Array(bytes)]), filename);
+  form.append("mode", mode);
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  let res: Response;
+  try {
+    res = await fetch(`${base}/ingest`, {
+      method: "POST",
+      body: form,
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      signal: controller.signal,
+    });
+  } catch (e) {
+    const reason =
+      e instanceof Error && e.name === "AbortError"
+        ? "timed out"
+        : e instanceof Error
+          ? e.message
+          : "unknown error";
+    throw new Error(`Could not reach the ingestion service at ${base} (${reason}).`);
+  } finally {
+    clearTimeout(timer);
+  }
+
+  const payload = (await res.json().catch(() => null)) as
+    | { markdown?: string; parser?: ParserName; warnings?: string[]; error?: string }
+    | null;
+  if (!res.ok || !payload || payload.error) {
+    throw new Error(payload?.error ?? `Ingestion service error (HTTP ${res.status}).`);
+  }
+  return {
+    markdown: payload.markdown ?? "",
+    parser: payload.parser ?? "markitdown",
+    warnings: payload.warnings ?? [],
+  };
+}
+
+/** Dev path: spawn the local Python CLI (services/ingestion-py/ingest.py). */
+function parseViaSubprocess(
+  bytes: Buffer | Uint8Array,
+  filename: string,
+  mode: ParseMode,
+  timeoutMs: number,
+): Promise<ParseResult> {
   const python = resolvePython();
 
   return new Promise<ParseResult>((resolve, reject) => {
