@@ -1,12 +1,11 @@
 // Shapes for Web Push + daily reminders.
 //
-// NOTE (flagged divergence — see PR description): the v1 schema has no table for
-// push subscriptions or reminder preferences, and the build contract says "don't
-// change the schema." So these live in Supabase Auth `user_metadata` (alongside
-// the existing `username`) — no migration, and the username→synthetic-email auth
-// model is untouched. A dedicated `push_subscriptions` table is the right home if
-// Carding productizes (multi-device, querying at scale); that's a future,
-// serialized schema PR, not this stream's call.
+// Storage: push subscriptions live in the `push_subscriptions` table (one row per device)
+// and reminder preferences live as `reminder_*` columns on `profiles` (1:1 with the user) —
+// see supabase/migrations/20260611120000_push_subscriptions.sql. (Earlier v1 stored these in
+// Auth user_metadata as a frozen-schema stopgap; that's been retired.)
+
+import type { Database } from "@/lib/types/database";
 
 // A browser PushSubscription serialized via `.toJSON()` — the shape web-push wants.
 export type StoredPushSubscription = {
@@ -22,11 +21,9 @@ export type ReminderPrefs = {
   lastSentOn?: string | null; // "YYYY-MM-DD" in tz — once-per-day dedup guard
 };
 
-// Everything Carding stores under auth user_metadata.
+// Only the username lives in Auth user_metadata now (set at signup, used by the layout).
 export type CardingUserMetadata = {
   username?: string;
-  reminder?: ReminderPrefs;
-  pushSubscriptions?: StoredPushSubscription[];
 };
 
 export const DEFAULT_REMINDER: ReminderPrefs = {
@@ -34,3 +31,16 @@ export const DEFAULT_REMINDER: ReminderPrefs = {
   time: "08:00",
   tz: "UTC",
 };
+
+export type PushSubscriptionRow = Database["public"]["Tables"]["push_subscriptions"]["Row"];
+
+/** Map a push_subscriptions row to the web-push subscription shape. */
+export function subscriptionFromRow(
+  r: Pick<PushSubscriptionRow, "endpoint" | "p256dh" | "auth_key" | "expiration_time">,
+): StoredPushSubscription {
+  return {
+    endpoint: r.endpoint,
+    expirationTime: r.expiration_time,
+    keys: { p256dh: r.p256dh, auth: r.auth_key },
+  };
+}

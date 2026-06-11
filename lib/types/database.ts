@@ -252,20 +252,62 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          reminder_enabled: boolean
+          reminder_last_sent_on: string | null
+          reminder_time: string
+          reminder_tz: string
           updated_at: string
           username: string
         }
         Insert: {
           created_at?: string
           id: string
+          reminder_enabled?: boolean
+          reminder_last_sent_on?: string | null
+          reminder_time?: string
+          reminder_tz?: string
           updated_at?: string
           username: string
         }
         Update: {
           created_at?: string
           id?: string
+          reminder_enabled?: boolean
+          reminder_last_sent_on?: string | null
+          reminder_time?: string
+          reminder_tz?: string
           updated_at?: string
           username?: string
+        }
+        Relationships: []
+      }
+      push_subscriptions: {
+        Row: {
+          auth_key: string
+          created_at: string
+          endpoint: string
+          expiration_time: number | null
+          id: string
+          p256dh: string
+          user_id: string
+        }
+        Insert: {
+          auth_key: string
+          created_at?: string
+          endpoint: string
+          expiration_time?: number | null
+          id?: string
+          p256dh: string
+          user_id: string
+        }
+        Update: {
+          auth_key?: string
+          created_at?: string
+          endpoint?: string
+          expiration_time?: number | null
+          id?: string
+          p256dh?: string
+          user_id?: string
         }
         Relationships: []
       }

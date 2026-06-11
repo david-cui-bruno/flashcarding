@@ -5,9 +5,13 @@
 //
 // Design: "fire on or after the set time, once per local day" (not "exactly at").
 // This is robust to cron cadence and missed ticks — run it every 5–15 min.
+//
+// Storage: reminder prefs are columns on `profiles`, subscriptions rows in
+// `push_subscriptions`. We query only profiles with reminders enabled (not every auth
+// user). The service-role admin client bypasses RLS so it can read across users.
 import { createAdminClient } from "@/lib/supabase/admin";
 import { sendPush } from "./web-push";
-import type { CardingUserMetadata, StoredPushSubscription } from "./types";
+import { subscriptionFromRow } from "./types";
 
 // Local "YYYY-MM-DD" and "HH:MM" for an instant in a given IANA timezone.
 function localParts(now: Date, tz: string): { date: string; time: string } {
@@ -70,78 +74,80 @@ export async function runReminders(now: Date): Promise<ReminderRunSummary> {
     skipped: 0,
   };
 
-  for (let page = 1; page <= 50; page++) {
-    const { data, error } = await admin.auth.admin.listUsers({ page, perPage: 100 });
-    if (error) throw error;
-    const users = data?.users ?? [];
-    if (users.length === 0) break;
+  // Only users who have actually enabled reminders.
+  const { data: profs, error } = await admin
+    .from("profiles")
+    .select("id, reminder_time, reminder_tz, reminder_last_sent_on")
+    .eq("reminder_enabled", true);
+  if (error) throw error;
 
-    for (const user of users) {
-      summary.scanned++;
-      const meta = (user.user_metadata ?? {}) as CardingUserMetadata;
-      const reminder = meta.reminder;
-      const subs: StoredPushSubscription[] = meta.pushSubscriptions ?? [];
+  for (const prof of profs ?? []) {
+    summary.scanned++;
 
-      if (!reminder?.enabled || subs.length === 0) {
-        summary.skipped++;
-        continue;
-      }
-
-      let local: { date: string; time: string };
-      try {
-        local = localParts(now, reminder.tz || "UTC");
-      } catch {
-        summary.skipped++;
-        continue; // bad tz — don't crash the whole run
-      }
-
-      // Not yet reminder time today, or already reminded today.
-      if (local.time < reminder.time || reminder.lastSentOn === local.date) {
-        summary.skipped++;
-        continue;
-      }
-
-      const due = await dueCount(admin, user.id, nowIso);
-      if (due === 0) {
-        // Nothing due — don't mark today as done, so it can fire later if cards come due.
-        summary.skipped++;
-        continue;
-      }
-
-      const payload = {
-        title: "Carding",
-        body: due === 1 ? "1 card is due. Time to study." : `${due} cards are due. Time to study.`,
-        url: "/study",
-        tag: "carding-reminder",
-      };
-
-      const expired: string[] = [];
-      for (const sub of subs) {
-        const result = await sendPush(sub, payload);
-        if (result === "sent") summary.pushesSent++;
-        else if (result === "expired") expired.push(sub.endpoint);
-      }
-
-      const remainingSubs = expired.length
-        ? subs.filter((s) => !expired.includes(s.endpoint))
-        : subs;
-      summary.pruned += expired.length;
-
-      // Merge back: mark reminded-today and persist any subscription pruning.
-      const nextMeta: CardingUserMetadata = {
-        ...meta,
-        reminder: { ...reminder, lastSentOn: local.date },
-        pushSubscriptions: remainingSubs,
-      };
-      const { error: updateErr } = await admin.auth.admin.updateUserById(user.id, {
-        user_metadata: nextMeta,
-      });
-      if (updateErr) console.error("[carding] failed to update meta for", user.id, updateErr.message);
-
-      summary.notified++;
+    let local: { date: string; time: string };
+    try {
+      local = localParts(now, prof.reminder_tz || "UTC");
+    } catch {
+      summary.skipped++;
+      continue; // bad tz — don't crash the whole run
     }
 
-    if (users.length < 100) break;
+    // Not yet reminder time today, or already reminded today.
+    if (local.time < prof.reminder_time || prof.reminder_last_sent_on === local.date) {
+      summary.skipped++;
+      continue;
+    }
+
+    const { data: subRows } = await admin
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth_key, expiration_time")
+      .eq("user_id", prof.id);
+    const subs = subRows ?? [];
+    if (subs.length === 0) {
+      summary.skipped++;
+      continue;
+    }
+
+    const due = await dueCount(admin, prof.id, nowIso);
+    if (due === 0) {
+      // Nothing due — don't mark today as done, so it can fire later if cards come due.
+      summary.skipped++;
+      continue;
+    }
+
+    const payload = {
+      title: "Carding",
+      body: due === 1 ? "1 card is due. Time to study." : `${due} cards are due. Time to study.`,
+      url: "/study",
+      tag: "carding-reminder",
+    };
+
+    const expired: string[] = [];
+    for (const row of subs) {
+      const result = await sendPush(subscriptionFromRow(row), payload);
+      if (result === "sent") summary.pushesSent++;
+      else if (result === "expired") expired.push(row.endpoint);
+    }
+
+    if (expired.length) {
+      await admin
+        .from("push_subscriptions")
+        .delete()
+        .eq("user_id", prof.id)
+        .in("endpoint", expired);
+      summary.pruned += expired.length;
+    }
+
+    // Mark reminded-today so it doesn't fire again until tomorrow.
+    const { error: updateErr } = await admin
+      .from("profiles")
+      .update({ reminder_last_sent_on: local.date })
+      .eq("id", prof.id);
+    if (updateErr) {
+      console.error("[carding] failed to mark reminder sent for", prof.id, updateErr.message);
+    }
+
+    summary.notified++;
   }
 
   return summary;
