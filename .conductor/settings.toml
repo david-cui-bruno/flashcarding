@@ -1,0 +1,13 @@
+"$schema" = "https://conductor.build/schemas/settings.repo.schema.json"
+
+# Static gitignored files copied into every new workspace (secrets, local config).
+# .env.local holds Supabase URL/keys + the Anthropic API key — never committed.
+file_include_globs = ".env.local\n.env*.local\n"
+
+[scripts]
+setup = "pnpm install"
+run = "pnpm dev --port $CONDUCTOR_PORT"
+# concurrent is safe: each workspace's Next.js dev server uses its own CONDUCTOR_PORT,
+# and Supabase is a remote shared service (not a local port). The shared-DB caveat is
+# handled by serializing schema changes — see docs/BUILD-PLAN.md.
+run_mode = "concurrent"
