@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { gradeCard } from "./actions";
+import { gradeCard, flagBadCard } from "./actions";
 
 type DueCard = {
   id: string;
@@ -17,8 +17,17 @@ export function StudyClient({ cards }: { cards: DueCard[] }) {
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [flagging, setFlagging] = useState(false);
+  const [reason, setReason] = useState("");
 
   const card = i < cards.length ? cards[i] : null;
+
+  const advance = useCallback(() => {
+    setShown(false);
+    setFlagging(false);
+    setReason("");
+    setI((n) => n + 1);
+  }, []);
 
   const grade = useCallback(
     async (g: 1 | 2 | 3 | 4) => {
@@ -26,11 +35,18 @@ export function StudyClient({ cards }: { cards: DueCard[] }) {
       setBusy(true);
       await gradeCard(card.id, g);
       setBusy(false);
-      setShown(false);
-      setI((n) => n + 1);
+      advance();
     },
-    [card, busy],
+    [card, busy, advance],
   );
+
+  const flagBad = async () => {
+    if (!card || busy) return;
+    setBusy(true);
+    await flagBadCard(card.id, reason);
+    setBusy(false);
+    advance();
+  };
 
   // Anki-style controls: space flips, 1–4 grade once the answer is shown.
   useEffect(() => {
@@ -90,6 +106,43 @@ export function StudyClient({ cards }: { cards: DueCard[] }) {
             </button>
           ))}
         </div>
+      )}
+
+      {/* "This card is bad" — removes the card and feeds the loop (docs/METRICS.md). */}
+      {flagging ? (
+        <div className="space-y-2 rounded border border-red-200 p-3">
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={2}
+            placeholder="What's wrong with it? (optional — feeds the generator)"
+            className="w-full rounded border px-2 py-1 text-sm"
+          />
+          <div className="flex gap-2">
+            <button
+              disabled={busy}
+              onClick={flagBad}
+              className="rounded bg-red-600 px-3 py-1.5 text-sm text-white disabled:opacity-50"
+            >
+              Remove this card
+            </button>
+            <button
+              disabled={busy}
+              onClick={() => setFlagging(false)}
+              className="rounded border px-3 py-1.5 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          disabled={busy}
+          onClick={() => setFlagging(true)}
+          className="text-xs text-neutral-400 underline hover:text-red-600 disabled:opacity-50"
+        >
+          ⚠ This card is bad
+        </button>
       )}
     </div>
   );

@@ -28,6 +28,9 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
         <Link href="/study" className="text-neutral-600 hover:text-black">
           Study
         </Link>
+        <Link href="/metrics" className="text-neutral-600 hover:text-black">
+          Metrics
+        </Link>
         <span className="ml-auto text-neutral-500">{username}</span>
         <form action={logout}>
           <button type="submit" className="text-neutral-600 underline hover:text-black">
