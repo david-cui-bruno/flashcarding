@@ -14,7 +14,8 @@ export default function NewPage() {
     <form action={action} className="space-y-3">
       <h1 className="text-xl font-semibold">New cards</h1>
       <p className="text-sm text-neutral-500">
-        Paste text or markdown. We&apos;ll generate atomic cards for you to review.
+        Paste text or markdown. We&apos;ll generate atomic cards in the background
+        and take you to review them when they&apos;re ready.
       </p>
       <textarea
         name="text"
@@ -29,7 +30,7 @@ export default function NewPage() {
         disabled={pending}
         className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        {pending ? "Generating… (~20s)" : "Generate cards"}
+        {pending ? "Submitting…" : "Generate cards"}
       </button>
     </form>
   );
