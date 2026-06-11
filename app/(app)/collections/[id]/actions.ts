@@ -4,10 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { ActionResult } from "@/app/(app)/library/actions";
 
-// Card-level management from inside a collection. This is maintenance, not the
-// generation review flow — so it deliberately does NOT write generation_feedback
-// (that signal feeds the edit-rate metric, docs/METRICS.md, and is owned by the
-// review/feedback streams). RLS scopes every query to the owner.
+// Card-level management from inside a collection. Editing a card here DOES count toward the
+// edit rate (docs/METRICS.md): a fix is a quality signal wherever it happens. Such edits are
+// tagged '[collection]' and grouped into their own batch (lib/metrics/server.ts) so they're
+// distinguishable from review-time edits and don't retroactively rewrite a generation batch's
+// quality number. RLS scopes every query to the owner.
 
 export async function updateCard(
   cardId: string,
@@ -27,11 +28,30 @@ export async function updateCard(
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in." };
 
+  // Capture the before→after delta (the strongest taste-tuning signal) for the feedback row.
+  const { data: before } = await supabase
+    .from("cards")
+    .select("term, definition")
+    .eq("id", cardId)
+    .single();
+
   const { error } = await supabase
     .from("cards")
     .update({ term: t, definition: d })
     .eq("id", cardId);
   if (error) return { error: error.message };
+
+  // Log the edit toward the edit rate — but only on a real change, and tagged '[collection]'.
+  if (!before || before.term !== t || before.definition !== d) {
+    await supabase.from("generation_feedback").insert({
+      user_id: user.id,
+      card_id: cardId,
+      action: "edited",
+      before: before ?? null,
+      after: { term: t, definition: d },
+      reason: "[collection] edited in collection view",
+    });
+  }
 
   revalidatePath(`/collections/${collectionId}`);
   return {};

@@ -35,13 +35,17 @@ function batchKeyOf(card: {
 export async function loadFeedbackEvents(supabase: Client): Promise<FeedbackEvent[]> {
   const { data, error } = await supabase
     .from("generation_feedback")
-    .select("action, created_at, card:cards(generation_job_id, collection_id)")
+    .select("action, reason, created_at, card:cards(generation_job_id, collection_id)")
     .order("created_at", { ascending: true });
   if (error || !data) return [];
   return data.map((r) => ({
     action: r.action,
     createdAt: r.created_at,
-    batchKey: batchKeyOf(r.card),
+    // Collection-view maintenance edits ('[collection]') count toward the edit rate but group
+    // into their own batch, so they don't retroactively rewrite a generation batch's quality.
+    batchKey: r.reason?.startsWith("[collection]")
+      ? "collection-maintenance"
+      : batchKeyOf(r.card),
   }));
 }
 

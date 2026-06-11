@@ -18,6 +18,15 @@ export const METRICS_CONFIG = {
   TRUST_EDIT_RATE: 0.1,
   /** Fraction of each new batch the user reviews in spot-check mode. */
   SPOT_CHECK_SAMPLE_FRACTION: 0.2,
+  /**
+   * Hysteresis around SPOT_CHECK_EDIT_RATE: a deadband (±margin) so the mode doesn't
+   * flip-flop when the rolling rate hovers right at the threshold. The mode only switches
+   * once the rate clears the threshold by this much; inside the band the prior leaning holds.
+   */
+  HYSTERESIS_MARGIN: 0.03,
+  /** How many of the most-recent reviews to drop when estimating the prior leaning (the
+   * "where we were" used to resolve the deadband without persisting a mode column). */
+  HYSTERESIS_LOOKBACK: 5,
 
   /** Most-recent reviewed cards used for the rolling edit rate. */
   ROLLING_WINDOW: 50,

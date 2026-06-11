@@ -62,7 +62,25 @@ export function decideReviewMode(
     };
   }
 
-  if (rolling < cfg.SPOT_CHECK_EDIT_RATE) {
+  // Spot-check vs review-all, WITH hysteresis. A bare `rolling < threshold` check flip-flops
+  // when the rate sits right at SPOT_CHECK_EDIT_RATE (one edited card tips it back and forth).
+  // We don't persist the mode (it stays a pure function of history, schema frozen), so we use
+  // a deadband: switch only when the rate clears the threshold by HYSTERESIS_MARGIN; inside the
+  // band, HOLD the prior leaning — derived from the rolling rate as of a few reviews ago.
+  const lo = cfg.SPOT_CHECK_EDIT_RATE - cfg.HYSTERESIS_MARGIN;
+  const hi = cfg.SPOT_CHECK_EDIT_RATE + cfg.HYSTERESIS_MARGIN;
+  let spotCheck: boolean;
+  if (rolling < lo) spotCheck = true; // clearly good → graduate
+  else if (rolling >= hi) spotCheck = false; // clearly poor → fall back to review-all
+  else {
+    const prior = rollingEditRate(
+      events.slice(0, Math.max(0, events.length - cfg.HYSTERESIS_LOOKBACK)),
+      cfg.ROLLING_WINDOW,
+    ).rate;
+    spotCheck = prior !== null && prior < cfg.SPOT_CHECK_EDIT_RATE; // hold where we were
+  }
+
+  if (spotCheck) {
     return {
       mode: "spot-check",
       rollingEditRate: rolling,
