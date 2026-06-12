@@ -1,26 +1,167 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
+@custom-variant dark (&:is(.dark *));
+
+/*
+  Carding design tokens — the "sage" theme from .context/mockups/theme.css,
+  mapped onto shadcn/ui's CSS-variable names. Warm-neutral base, sage accent,
+  one radius token. Light-mode only (the design is light); .dark is defined for
+  shadcn's dark: variants to compile but is never activated (no theme toggle).
+  All hex values are AA-checked per .context/mockups/POLISH.md.
+*/
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --radius: 0.75rem;
+
+  /* warm-neutral base */
+  --background: #faf9f7;
+  --foreground: #1c1917;
+  --card: #ffffff;
+  --card-foreground: #1c1917;
+  --popover: #ffffff;
+  --popover-foreground: #1c1917;
+
+  /* sage accent */
+  --primary: #5e7d6e;
+  --primary-foreground: #ffffff;
+
+  --secondary: #f4f3f1;
+  --secondary-foreground: #1c1917;
+  --muted: #f4f3f1;
+  --muted-foreground: #78716c;
+
+  /* accent = accent-tinted "soft" surface */
+  --accent: #eef2ef;
+  --accent-foreground: #3f5a4c;
+
+  --destructive: #e11d48;
+  --destructive-foreground: #ffffff;
+
+  --border: #e7e5e4;
+  --input: #e2e0dd;
+  --ring: #5e7d6e;
+
+  /* semantic (accent-independent) — Anki count triplet + states */
+  --new: #2563eb;        /* new cards */
+  --new-soft: #dbeafe;
+  --learning: #e11d48;   /* learning cards */
+  --learning-soft: #ffe4e6;
+  --due: #16a34a;        /* due cards */
+  --due-soft: #dcfce7;
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --warning: #d97706;
+  --warning-soft: #fef3c7;
+  --info: #2563eb;
+
+  /* sidebar (custom nav shell) */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1c1917;
+  --sidebar-primary: #5e7d6e;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #eef2ef;
+  --sidebar-accent-foreground: #3f5a4c;
+  --sidebar-border: #e7e5e4;
+  --sidebar-ring: #5e7d6e;
+}
+
+.dark {
+  --background: #1c1917;
+  --foreground: #faf9f7;
+  --card: #292524;
+  --card-foreground: #faf9f7;
+  --popover: #292524;
+  --popover-foreground: #faf9f7;
+  --primary: #7e9d8e;
+  --primary-foreground: #1c1917;
+  --secondary: #292524;
+  --secondary-foreground: #faf9f7;
+  --muted: #292524;
+  --muted-foreground: #a8a29e;
+  --accent: #2a322d;
+  --accent-foreground: #c9d6cf;
+  --destructive: #f43f5e;
+  --destructive-foreground: #1c1917;
+  --border: #353130;
+  --input: #353130;
+  --ring: #7e9d8e;
+  --sidebar: #1c1917;
+  --sidebar-foreground: #faf9f7;
+  --sidebar-primary: #7e9d8e;
+  --sidebar-primary-foreground: #1c1917;
+  --sidebar-accent: #2a322d;
+  --sidebar-accent-foreground: #c9d6cf;
+  --sidebar-border: #353130;
+  --sidebar-ring: #7e9d8e;
 }
 
 @theme inline {
+  --font-sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* semantic */
+  --color-new: var(--new);
+  --color-new-soft: var(--new-soft);
+  --color-learning: var(--learning);
+  --color-learning-soft: var(--learning-soft);
+  --color-due: var(--due);
+  --color-due-soft: var(--due-soft);
+  --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
+  --color-warning: var(--warning);
+  --color-warning-soft: var(--warning-soft);
+  --color-info: var(--info);
+
+  /* sidebar */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  html {
+    letter-spacing: -0.01em;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  h1, h2, h3 {
+    letter-spacing: -0.02em;
+  }
+  /* tabular numerals on all counts so they don't jitter (POLISH.md) */
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
 }

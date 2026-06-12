@@ -116,7 +116,7 @@ export async function runReminders(now: Date): Promise<ReminderRunSummary> {
     }
 
     const payload = {
-      title: "Carding",
+      title: "Cardstock",
       body: due === 1 ? "1 card is due. Time to study." : `${due} cards are due. Time to study.`,
       url: "/study",
       tag: "carding-reminder",

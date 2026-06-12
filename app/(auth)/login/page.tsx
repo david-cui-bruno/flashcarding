@@ -10,7 +10,7 @@ export default function LoginPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <form action={action} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-semibold">Carding</h1>
+        <h1 className="text-2xl font-semibold">Cardstock</h1>
         <p className="text-sm text-neutral-500">Log in to study your cards.</p>
 
         <div className="space-y-1">

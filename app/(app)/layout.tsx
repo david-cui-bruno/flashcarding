@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { logout } from "@/app/(auth)/actions";
+import { AppShell } from "@/components/app-shell";
+import { Toaster } from "@/components/ui/sonner";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
@@ -13,35 +13,18 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   const username = (user.user_metadata?.username as string | undefined) ?? "you";
 
+  // "To triage" badge = freshly-generated cards still pending review.
+  const { count } = await supabase
+    .from("cards")
+    .select("id", { count: "exact", head: true })
+    .eq("review_status", "pending");
+
   return (
-    <div className="min-h-screen">
-      <nav className="flex items-center gap-4 border-b px-4 py-3 text-sm">
-        <Link href="/library" className="font-semibold">
-          Carding
-        </Link>
-        <Link href="/new" className="text-neutral-600 hover:text-black">
-          New
-        </Link>
-        <Link href="/review" className="text-neutral-600 hover:text-black">
-          Review
-        </Link>
-        <Link href="/study" className="text-neutral-600 hover:text-black">
-          Study
-        </Link>
-        <Link href="/metrics" className="text-neutral-600 hover:text-black">
-          Metrics
-        </Link>
-        <Link href="/settings" className="text-neutral-600 hover:text-black">
-          Settings
-        </Link>
-        <span className="ml-auto text-neutral-500">{username}</span>
-        <form action={logout}>
-          <button type="submit" className="text-neutral-600 underline hover:text-black">
-            Log out
-          </button>
-        </form>
-      </nav>
-      <main className="mx-auto max-w-2xl p-4">{children}</main>
-    </div>
+    <>
+      <AppShell username={username} triageCount={count ?? 0}>
+        {children}
+      </AppShell>
+      <Toaster />
+    </>
   );
 }

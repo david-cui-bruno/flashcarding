@@ -1,4 +1,4 @@
-// Live end-to-end walk of the Carding loop via a real browser (Playwright).
+// Live end-to-end walk of the Cardstock loop via a real browser (Playwright).
 // Usage: node scripts/walk.mjs   (dev server must be running on BASE_URL)
 import { chromium } from "playwright";
 import { mkdirSync } from "fs";

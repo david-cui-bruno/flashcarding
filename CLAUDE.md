@@ -1,13 +1,13 @@
-# Carding
+# Cardstock
 
-Carding turns long documents — PDFs, Word docs, markdown, and pasted text — into high-quality, atomic flashcards using AI, reviewed on an Anki-style spaced-repetition schedule (FSRS). It is a personal tool for someone who learns best through memorization, built so it can become a product later.
+Cardstock turns long documents — PDFs, Word docs, markdown, and pasted text — into high-quality, atomic flashcards using AI, reviewed on an Anki-style spaced-repetition schedule (FSRS). It is a personal tool for someone who learns best through memorization, built so it can become a product later.
 
 ## How to use these docs (read this first)
 
 The spec lives in `docs/`. It is split into two layers, and the layers have different rules:
 
 **🔒 Frozen docs — intent & contracts. Do NOT drift through v1.**
-- `docs/VISION.md` — what Carding is and the v1 scope.
+- `docs/VISION.md` — what Cardstock is and the v1 scope.
 - `docs/CARD-QUALITY.md` — **the keystone.** What a good card is. Everything references it.
 - `docs/METRICS.md` — what we optimize for and how we measure it.
 - `docs/SCHEDULING.md` — the spaced-repetition behavior.

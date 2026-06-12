@@ -1,4 +1,4 @@
-// Generate Carding PWA icons as PNGs by rendering an SVG with headless Chromium
+// Generate Cardstock PWA icons as PNGs by rendering an SVG with headless Chromium
 // (Playwright is already a dev dependency — no extra image library needed).
 // Usage: pnpm gen:icons   — writes to public/icons/.
 import { chromium } from "playwright";
@@ -9,7 +9,7 @@ import { dirname, join } from "path";
 const OUT = join(dirname(fileURLToPath(import.meta.url)), "..", "public", "icons");
 mkdirSync(OUT, { recursive: true });
 
-// The Carding mark: two stacked flashcards (a muted card behind, a white card in
+// The Cardstock mark: two stacked flashcards (a muted card behind, a white card in
 // front with hint "text" lines) on a near-black tile. `scale` shrinks the glyph
 // for maskable icons so it stays inside the safe zone; `bg=null` => transparent.
 function svg({ scale = 0.82, bg = "#111111", rounded = 22, glyph = "cards" }) {

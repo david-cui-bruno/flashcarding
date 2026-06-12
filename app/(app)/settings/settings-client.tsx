@@ -1,6 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Bell, Clock, Download, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import { Logo } from "@/components/logo";
+import { logout } from "@/app/(auth)/actions";
 import {
   savePushSubscriptionAction,
   removePushSubscriptionAction,
@@ -27,8 +35,6 @@ function serialize(sub: PushSubscription): StoredPushSubscription {
   };
 }
 
-// Browser-only facts, detected once after mount (running these during SSR would
-// cause a hydration mismatch).
 type ClientEnv = {
   supported: boolean;
   isIOS: boolean;
@@ -37,11 +43,15 @@ type ClientEnv = {
   tz: string;
 };
 
+type BeforeInstallPromptEvent = Event & { prompt: () => Promise<void> };
+
 type Props = {
   initialPrefs: ReminderPrefs;
   initialSubscriptionCount: number;
   vapidPublicKey: string;
   pushConfigured: boolean;
+  username: string;
+  email: string;
 };
 
 export function SettingsClient({
@@ -49,16 +59,17 @@ export function SettingsClient({
   initialSubscriptionCount,
   vapidPublicKey,
   pushConfigured,
+  username,
+  email,
 }: Props) {
   const [client, setClient] = useState<ClientEnv | null>(null);
   const [subscribed, setSubscribed] = useState(initialSubscriptionCount > 0);
-
   const [enabled, setEnabled] = useState(initialPrefs.enabled);
   const [time, setTime] = useState(initialPrefs.time);
-
   const [busy, setBusy] = useState(false);
   const [pushMsg, setPushMsg] = useState<string | null>(null);
   const [prefsMsg, setPrefsMsg] = useState<string | null>(null);
+  const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
     const supported =
@@ -72,7 +83,6 @@ export function SettingsClient({
       permission: supported ? Notification.permission : null,
       tz: Intl.DateTimeFormat().resolvedOptions().timeZone || initialPrefs.tz,
     };
-    // One synchronous update for client-only feature detection — the intended use.
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setClient(env);
 
@@ -82,8 +92,32 @@ export function SettingsClient({
         .then((sub) => setSubscribed(Boolean(sub)))
         .catch(() => {});
     }
+
+    const onPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", onPrompt);
+    return () => window.removeEventListener("beforeinstallprompt", onPrompt);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  async function persist(nextEnabled: boolean, nextTime: string) {
+    setBusy(true);
+    setPrefsMsg(null);
+    try {
+      const tz = client?.tz ?? initialPrefs.tz;
+      const res = await saveReminderPrefsAction({ enabled: nextEnabled, time: nextTime, tz });
+      setPrefsMsg(res.ok ? "Saved." : res.error);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  function toggleEnabled(v: boolean) {
+    setEnabled(v);
+    void persist(v, time);
+  }
 
   async function enableNotifications() {
     setBusy(true);
@@ -129,18 +163,6 @@ export function SettingsClient({
     }
   }
 
-  async function savePrefs() {
-    setBusy(true);
-    setPrefsMsg(null);
-    try {
-      const tz = client?.tz ?? initialPrefs.tz;
-      const res = await saveReminderPrefsAction({ enabled, time, tz });
-      setPrefsMsg(res.ok ? "Saved." : res.error);
-    } finally {
-      setBusy(false);
-    }
-  }
-
   async function sendTest() {
     setBusy(true);
     setPushMsg(null);
@@ -152,118 +174,178 @@ export function SettingsClient({
     }
   }
 
-  // ---- render ----------------------------------------------------------------
+  async function install() {
+    if (!installPrompt) return;
+    await installPrompt.prompt();
+    setInstallPrompt(null);
+  }
 
-  if (client === null) return null; // wait for client-only feature detection
+  if (client === null) {
+    return <div className="px-4 py-6 md:p-10" />;
+  }
 
   const { supported, isIOS, isStandalone, permission, tz } = client;
   const needsInstallOnIOS = isIOS && !isStandalone;
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-3">
-        <h2 className="font-medium">Daily study reminders</h2>
-        <p className="text-sm text-neutral-600">
-          Get a push notification when you have cards due, at the time you choose.
-        </p>
-
-        {!pushConfigured && (
-          <p className="rounded border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800">
-            Push isn&apos;t configured on the server yet. Add VAPID keys
-            (<code>pnpm gen:vapid</code> → <code>.env.local</code>) to enable notifications.
-          </p>
-        )}
-
-        {!supported && (
-          <p className="rounded border p-3 text-sm text-neutral-600">
-            This browser doesn&apos;t support push notifications.
-          </p>
-        )}
-
-        {needsInstallOnIOS && (
-          <p className="rounded border border-blue-200 bg-blue-50 p-3 text-sm text-blue-800">
-            On iPhone/iPad, first install Carding: tap the Share button{" "}
-            <span aria-hidden>⎋</span> then <strong>Add to Home Screen</strong>. Notifications
-            work from the installed app (iOS 16.4+).
-          </p>
-        )}
-
-        {supported && pushConfigured && (
-          <div className="flex flex-wrap items-center gap-2">
-            {subscribed ? (
-              <button
-                onClick={disableNotifications}
-                disabled={busy}
-                className="rounded border px-3 py-1.5 text-sm disabled:opacity-50"
-              >
-                Disable on this device
-              </button>
-            ) : (
-              <button
-                onClick={enableNotifications}
-                disabled={busy || needsInstallOnIOS}
-                className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
-              >
-                Enable notifications
-              </button>
-            )}
-            <button
-              onClick={sendTest}
-              disabled={busy || !subscribed}
-              className="rounded border px-3 py-1.5 text-sm disabled:opacity-50"
-            >
-              Send a test
-            </button>
-            {permission === "denied" && (
-              <span className="text-sm text-red-600">Notifications are blocked in your browser.</span>
-            )}
-          </div>
-        )}
-
-        {pushMsg && (
-          <p className="text-sm text-neutral-700" aria-live="polite">
-            {pushMsg}
-          </p>
-        )}
-      </section>
-
-      <section className="space-y-3">
-        <h2 className="font-medium">Reminder schedule</h2>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={enabled} onChange={(e) => setEnabled(e.target.checked)} />
-          Remind me daily
-        </label>
-        <div className="flex items-center gap-2 text-sm">
-          <label htmlFor="reminder-time">at</label>
-          <input
-            id="reminder-time"
-            type="time"
-            value={time}
-            onChange={(e) => setTime(e.target.value)}
-            className="rounded border px-2 py-1"
-          />
-          <span className="text-neutral-500">{tz}</span>
+    <div className="px-4 py-6 md:p-10">
+      <div className="mx-auto max-w-2xl">
+        <div className="mb-7">
+          <h1 className="text-2xl font-semibold md:text-3xl">Settings</h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">Reminders, install, and your account.</p>
         </div>
-        {enabled && !subscribed && supported && (
-          <p className="text-sm text-amber-700">
-            Enable notifications above so reminders can reach you.
-          </p>
-        )}
-        <div className="flex items-center gap-3">
-          <button
-            onClick={savePrefs}
-            disabled={busy}
-            className="rounded bg-black px-3 py-1.5 text-sm text-white disabled:opacity-50"
-          >
-            Save schedule
-          </button>
-          {prefsMsg && (
-            <span className="text-sm text-neutral-700" aria-live="polite">
-              {prefsMsg}
-            </span>
+
+        <div className="space-y-8">
+          {/* Daily study reminders */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Daily study reminders</h2>
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3 px-5 py-4">
+                <Bell className="size-5 text-primary" />
+                <div className="flex-1 leading-tight">
+                  <div className="text-sm font-medium">Remind me daily</div>
+                  <div className="mt-0.5 text-[0.78rem] text-muted-foreground">
+                    A gentle nudge when cards are due. No streaks, no guilt.
+                  </div>
+                </div>
+                <Switch checked={enabled} onCheckedChange={toggleEnabled} disabled={busy} />
+              </div>
+
+              <hr className="border-border" />
+
+              <div className="flex flex-wrap items-center gap-3 px-5 py-4">
+                <Clock className="size-5 text-muted-foreground" />
+                <span className="text-sm text-muted-foreground">Remind me at</span>
+                <Input
+                  type="time"
+                  value={time}
+                  onChange={(e) => setTime(e.target.value)}
+                  onBlur={() => persist(enabled, time)}
+                  className="w-auto font-semibold tabular-nums"
+                />
+                <span className="ml-auto text-[0.78rem] text-muted-foreground">{tz}</span>
+              </div>
+
+              {/* device subscription + status */}
+              {(supported || !pushConfigured) && (
+                <>
+                  <hr className="border-border" />
+                  <div className="space-y-3 px-5 py-4">
+                    {!pushConfigured ? (
+                      <p className="text-sm text-warning">
+                        Push isn&rsquo;t configured on the server yet.
+                      </p>
+                    ) : needsInstallOnIOS ? (
+                      <p className="text-sm text-info">
+                        On iPhone/iPad, install Cardstock first (below), then enable notifications from
+                        the installed app.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-2">
+                        {subscribed ? (
+                          <Button variant="outline" size="sm" onClick={disableNotifications} disabled={busy}>
+                            Disable on this device
+                          </Button>
+                        ) : (
+                          <Button size="sm" onClick={enableNotifications} disabled={busy}>
+                            Enable notifications
+                          </Button>
+                        )}
+                        <Button variant="ghost" size="sm" onClick={sendTest} disabled={busy || !subscribed}>
+                          Send a test
+                        </Button>
+                        {permission === "denied" && (
+                          <span className="text-sm text-destructive">Blocked in your browser.</span>
+                        )}
+                      </div>
+                    )}
+                    {!supported && pushConfigured && (
+                      <p className="text-sm text-muted-foreground">
+                        This browser doesn&rsquo;t support push notifications.
+                      </p>
+                    )}
+                    {(pushMsg || prefsMsg) && (
+                      <p className="text-[0.8rem] text-muted-foreground" aria-live="polite">
+                        {pushMsg ?? prefsMsg}
+                      </p>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+
+          {/* Install Cardstock (PWA) */}
+          {!isStandalone && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold">Install Cardstock</h2>
+              <div className="rounded-xl border border-border bg-card px-5 py-5">
+                <div className="flex items-center gap-4">
+                  <span className="flex size-[46px] flex-none items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_18px_-6px_rgba(94,125,110,.55)]">
+                    <Logo size={24} className="text-primary-foreground" />
+                  </span>
+                  <div className="flex-1 leading-snug">
+                    <div className="text-sm font-medium">Keep Cardstock one click away</div>
+                    <div className="mt-0.5 text-[0.82rem] text-muted-foreground">
+                      Install it as an app — opens in its own window and works offline for review.
+                    </div>
+                  </div>
+                  {installPrompt && (
+                    <Button onClick={install} className="whitespace-nowrap">
+                      <Download className="size-4" />
+                      Install app
+                    </Button>
+                  )}
+                </div>
+                {isIOS && (
+                  <>
+                    <hr className="my-4 border-border" />
+                    <p className="text-[0.78rem] leading-relaxed text-muted-foreground">
+                      On iPhone, open Cardstock in Safari, tap Share, then &ldquo;Add to Home Screen.&rdquo;
+                    </p>
+                  </>
+                )}
+              </div>
+            </section>
           )}
+
+          {/* Account */}
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Account</h2>
+            <div className="overflow-hidden rounded-xl border border-border bg-card">
+              <div className="flex items-center gap-3.5 px-5 py-4">
+                <span className="flex size-10 items-center justify-center rounded-full bg-accent text-[0.95rem] font-semibold text-accent-foreground">
+                  {username.charAt(0).toUpperCase()}
+                </span>
+                <div className="min-w-0 flex-1 leading-tight">
+                  <div className="truncate text-sm font-medium">{username}</div>
+                  {email && <div className="mt-0.5 truncate text-[0.78rem] text-muted-foreground">{email}</div>}
+                </div>
+                <Badge className="bg-accent text-accent-foreground">Username login</Badge>
+              </div>
+
+              <hr className="border-border" />
+
+              <form action={logout} className="flex items-center justify-between px-5 py-4">
+                <div className="leading-tight">
+                  <div className="text-sm font-medium">Log out</div>
+                  <div className="mt-0.5 text-[0.78rem] text-muted-foreground">Sign out of this device.</div>
+                </div>
+                <Button
+                  type="submit"
+                  variant="ghost"
+                  className={cn("font-medium text-destructive hover:bg-destructive/10 hover:text-destructive")}
+                >
+                  <LogOut className="size-4" />
+                  Log out
+                </Button>
+              </form>
+            </div>
+          </section>
+
+          <p className="pt-1 text-center text-[0.74rem] text-muted-foreground">Cardstock · v1</p>
         </div>
-      </section>
+      </div>
     </div>
   );
 }

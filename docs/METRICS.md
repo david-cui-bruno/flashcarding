@@ -1,6 +1,6 @@
 # METRICS 🔒 (frozen)
 
-What Carding optimizes for, how we measure it, and the thresholds that drive the human-review workflow.
+What Cardstock optimizes for, how we measure it, and the thresholds that drive the human-review workflow.
 
 ## North star
 - **Near-term north star — Card Quality (metric B): the edit rate.** Of the cards the user reviews, what fraction does the user keep *without editing*? If the user doesn't trust the cards, nothing else matters, so this is the number we watch first. Higher is better.

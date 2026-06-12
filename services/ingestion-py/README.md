@@ -1,6 +1,6 @@
-# Carding ingestion sidecar
+# Cardstock ingestion sidecar
 
-Converts uploaded **PDF / `.docx`** bytes into clean markdown for the Carding
+Converts uploaded **PDF / `.docx`** bytes into clean markdown for the Cardstock
 generation pipeline (docs/PIPELINE.md, stage 0). Two ways to run it, same logic
 (`convert()` in `ingest.py`):
 
