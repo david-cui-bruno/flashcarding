@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import Link from "next/link";
 import { Flag } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,7 +61,6 @@ export function StudyDeckClient({
 
   const [i, setI] = useState(0);
   const [shown, setShown] = useState(false);
-  const [busy, setBusy] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [flagging, setFlagging] = useState(false);
   const [reason, setReason] = useState("");
@@ -88,25 +88,26 @@ export function StudyDeckClient({
     setI((n) => n + 1);
   }, []);
 
+  // Optimistic: advance the instant a grade is pressed and persist in the background.
+  // The write is a DB round trip we don't want to wait on (Anki-style). A failure is
+  // rare and non-fatal (that one card just won't be rescheduled), so we only toast.
   const grade = useCallback(
-    async (g: 1 | 2 | 3 | 4) => {
-      if (!card || busy) return;
-      setBusy(true);
-      await gradeCard(card.id, g, mode);
+    (g: 1 | 2 | 3 | 4) => {
+      if (!card) return;
+      void gradeCard(card.id, g, mode).catch(() =>
+        toast.error("Couldn't save that review — it may not be rescheduled."),
+      );
       setReviewed((n) => n + 1);
-      setBusy(false);
       advance();
     },
-    [card, busy, mode, advance],
+    [card, mode, advance],
   );
 
-  const flagBad = useCallback(async () => {
-    if (!card || busy) return;
-    setBusy(true);
-    await flagBadCard(card.id, reason);
-    setBusy(false);
+  const flagBad = useCallback(() => {
+    if (!card) return;
+    void flagBadCard(card.id, reason).catch(() => toast.error("Couldn't remove that card."));
     advance();
-  }, [card, busy, reason, advance]);
+  }, [card, reason, advance]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -156,7 +157,7 @@ export function StudyDeckClient({
             <div className="mb-6 rounded-lg border border-warning/40 bg-warning-soft px-3 py-2 text-left text-sm text-warning">
               You&rsquo;ve missed this {card.lapses} times — leeches are usually a sign the{" "}
               <em>card</em> is the problem.{" "}
-              <button onClick={() => setFlagging(true)} disabled={busy} className="font-medium underline">
+              <button onClick={() => setFlagging(true)} className="font-medium underline">
                 Flag it
               </button>
               .
@@ -184,7 +185,6 @@ export function StudyDeckClient({
             {GRADES.map(({ g, label, key, cls, int }) => (
               <button
                 key={g}
-                disabled={busy}
                 onClick={() => grade(g as 1 | 2 | 3 | 4)}
                 className={cn(
                   "flex min-w-[78px] flex-col items-center gap-0.5 rounded-md border border-border bg-card px-3 pb-1.5 pt-2 transition-colors disabled:opacity-50 md:min-w-[86px]",
@@ -223,13 +223,12 @@ export function StudyDeckClient({
               placeholder="What's wrong with it? (optional — feeds the generator)"
             />
             <div className="flex gap-2">
-              <Button variant="destructive" size="sm" disabled={busy} onClick={flagBad}>
+              <Button variant="destructive" size="sm" onClick={flagBad}>
                 Remove this card
               </Button>
               <Button
                 variant="ghost"
                 size="sm"
-                disabled={busy}
                 onClick={() => {
                   setFlagging(false);
                   setReason("");
@@ -241,9 +240,8 @@ export function StudyDeckClient({
           </div>
         ) : (
           <button
-            disabled={busy}
             onClick={() => setFlagging(true)}
-            className="flex items-center gap-1.5 text-[0.74rem] text-muted-foreground transition-colors hover:text-destructive disabled:opacity-50"
+            className="flex items-center gap-1.5 text-[0.74rem] text-muted-foreground transition-colors hover:text-destructive"
           >
             <Flag className="size-[13px]" />
             this card is bad
