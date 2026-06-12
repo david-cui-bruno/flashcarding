@@ -1,17 +1,18 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { getSessionClaims } from "@/lib/supabase/auth";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login");
+  // Locally-verified claims (no network). The proxy already gates auth; this is a
+  // defense-in-depth check and gives us the username straight from the token.
+  const claims = await getSessionClaims(supabase);
+  if (!claims) redirect("/login");
 
-  const username = (user.user_metadata?.username as string | undefined) ?? "you";
+  const username = claims.user_metadata?.username ?? "you";
 
   // "To triage" badge = freshly-generated cards still pending review.
   const { count } = await supabase
