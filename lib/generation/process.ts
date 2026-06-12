@@ -9,6 +9,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { getAnthropic } from "./anthropic";
 import { gateCards, cardKey } from "./gates";
 import { selfFixMalformed } from "./selffix";
+import { generateDeckTitle } from "./title";
 import type { GeneratedCard } from "@/lib/types/domain";
 import type { Database } from "@/lib/types/database";
 
@@ -133,7 +134,9 @@ export async function processBatch(supabase: DB, job: Job): Promise<ProcessOutco
   const accepted = await gateAndFix(drafted, source.content);
 
   // One collection per run, named after the source (cards reassignable later).
-  const title = source.title ?? "Generated cards";
+  // Ask the model for a short topical title from the cards; fall back to the
+  // source-derived title (first line of paste / filename) if it can't.
+  const title = await generateDeckTitle(accepted, source.title ?? "Generated cards");
   const { data: collection, error: colErr } = await supabase
     .from("collections")
     .insert({ user_id: job.user_id, name: title })
