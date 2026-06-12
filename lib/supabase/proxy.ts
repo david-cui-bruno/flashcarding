@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { longLived } from "./cookies";
+import { getSessionClaims } from "./auth";
 
 // Refreshes the Supabase session cookie on every request and gates routes:
 // unauthenticated users are sent to /login; authenticated users are kept out of
@@ -28,9 +29,9 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // Verified locally (no network) — see getSessionClaims. getClaims() also
+  // refreshes/persists the token via getSession when it's near expiry.
+  const authed = (await getSessionClaims(supabase)) !== null;
 
   const path = request.nextUrl.pathname;
   const isAuthRoute = path === "/login" || path === "/signup";
@@ -43,12 +44,12 @@ export async function updateSession(request: NextRequest) {
     path.startsWith("/icons/") ||
     path.startsWith("/api/cron/");
 
-  if (!user && !isPublic) {
+  if (!authed && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);
   }
-  if (user && (isAuthRoute || path === "/")) {
+  if (authed && (isAuthRoute || path === "/")) {
     const url = request.nextUrl.clone();
     url.pathname = "/library";
     return NextResponse.redirect(url);
