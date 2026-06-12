@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { longLived } from "./cookies";
 
 // Refreshes the Supabase session cookie on every request and gates routes:
 // unauthenticated users are sent to /login; authenticated users are kept out of
@@ -20,7 +21,7 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
+            response.cookies.set(name, value, longLived(value, options)),
           );
         },
       },
