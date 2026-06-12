@@ -1,6 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // The dev-only indicator badge overlaps the bottom-left sidebar profile; hide it.
+  devIndicators: false,
   experimental: {
     serverActions: {
       // PDF/Word uploads flow through a Server Action; the default body limit is

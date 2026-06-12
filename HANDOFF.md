@@ -1,124 +1,136 @@
-# Carding — Project Handoff
+# Cardstock — Project Handoff
 
-_Last updated: 2026-06-11. This is a point-in-time status doc, not a spec. The specs are in `docs/` (and are the source of truth for intent); the code is the source of truth for implementation._
+_Last updated: 2026-06-11. Point-in-time status, not a spec. Specs live in `docs/` (source of truth for intent); the code is source of truth for implementation; the **UI/UX design** is captured in `.context/mockups/` + §7 below (designed, not yet built into the real app)._
 
 ---
 
 ## 1. TL;DR
-Carding turns documents into atomic, AI-generated flashcards reviewed on an FSRS (modern-Anki) schedule. The **foundation + a verified walking skeleton are merged to `main`** (PR #1). The **six parallel build streams have begun fanning out** in separate Conductor workspaces. Everything compiles, and the full loop (signup → paste → generate → review → study) was walked live in a real browser.
+Cardstock turns documents → atomic, AI-generated flashcards, reviewed on an FSRS schedule. **All six fan-out build streams are integrated, verified, and merged to `main`** (through PR #10). The **document-ingestion service is deployed and live on Railway**, and **push storage is migrated to Postgres** (both against the live Supabase DB). The backend/feature loop works end-to-end (signup → upload/paste → async generation → review → study → metrics), proven by a live headless walk.
+
+**The current frontier is the UI/UX rebuild.** We ran a full design exploration and **converged on a complete visual + interaction design** (sage accent, deck-by-deck study, card-less Anki-style study/review, shadcn). That design exists as **HTML mockups + galleries in `.context/mockups/`** and is **NOT yet built into the real Next.js app** — the app still wears the original walking-skeleton UI. Building the converged design in shadcn is the next major task.
 
 ## 2. What it is / who it's for
-A personal tool (built to be productizable) for a power-memorizer who learns by flashcards and wants to stop hand-authoring them. Read `docs/VISION.md`. The differentiator is **card quality** (`docs/CARD-QUALITY.md` is the keystone).
+Personal tool (built to be productizable) for a power-memorizer who learns by flashcards. Differentiator = **card quality** (`docs/CARD-QUALITY.md` is the keystone). Read `docs/VISION.md`.
 
-## 3. Current state
-- **`main` = commit `f7ee10b`** (PR #1 merged). Contains: all spec docs, the Supabase schema + generated types, the Next.js app, the generation core, and the full walking-skeleton loop. `tsc --noEmit` and `next build` are clean.
-- **Verified live**: a headless-Chromium walk (`scripts/walk.mjs`) ran signup → paste → live Sonnet generation (9 grounded atomic cards) → keep/edit/reject → FSRS grade. The proxy gates all protected routes (`307 → /login`).
-- **Fan-out is in progress.** At least the **feedback+metrics** stream is live on branch `david-cui-bruno/albuquerque-v2` (see §10).
+## 3. Repo, branches, PRs
+- **GitHub:** `github.com/david-cui-bruno/flashcarding`. Default branch: `main`.
+- **`main` HEAD = `3ae8582`** (Merge PR #10). History: PR #1 (foundation+skeleton) → #2–#7 (the six streams) → **#8 (integration of all six)** → #9 (Railway hardening) → #10 (Docling perf). **All PRs #1–#10 are MERGED. Zero open PRs.**
+- **Branches:** `main`, `integration` (where everything was reconciled; still exists), and the six stream branches (`david-cui-bruno/{abu-dhabi, albuquerque-v2, generation-pipeline, havana, ingestion-doc, little-rock-v2}`) — all merged, prunable whenever.
+- Conductor workspaces live under `/Users/davidcui824/conductor/workspaces/flashcarding/<name>`. This handoff was authored from `shanghai-v1`.
 
-## 4. Repo & branches
-- GitHub: `github.com/david-cui-bruno/flashcarding`. Default/base branch: `main`.
-- Conductor root repo dir: `/Users/davidcui824/conductor/repos/flashcarding`. Workspaces live under `/Users/davidcui824/conductor/workspaces/flashcarding/<name>`.
-- Commit history on `main`: `06d0b20` (initial) → `66f77af` (foundation) → `de8cbe7` (skeleton) → `b0d627b` (e2e harness) → `f7ee10b` (merge).
-- This handoff was authored from workspace `shanghai-v1` (branch `david-cui-bruno/superhot-story-flashcard-docs`, now merged).
+## 4. Deployed infrastructure
+### Supabase — project `carding`, ref `tmqgknkshpkxojvdhejq` (us-east-1, org Framewise Health)
+- Two migrations applied to the **live DB**: `20260611094838_init_schema.sql` (original tables) and **`20260611120000_push_subscriptions.sql`** (NEW: `push_subscriptions` table + `reminder_*` columns on `profiles`, retiring the old `user_metadata` stopgap).
+- Tables: `profiles` (+ reminder_enabled/time/tz/last_sent_on), `collections`, `sources`, `cards`, `generation_jobs`, `generation_feedback`, `study_reviews`, `push_subscriptions`. Owner-only RLS everywhere; Realtime on `generation_jobs`; private `card-images` bucket.
+- Manage: add a migration under `supabase/migrations/`, `supabase db push`; regen types `supabase gen types typescript --linked > lib/types/database.ts`. CLI is logged in on this Mac.
 
-## 5. Stack & file map
-- **Next.js 16 + React 19 + Tailwind v4 (TypeScript)**, pnpm. Installable PWA is the v1 target (no Electron). Newer than most training data — `AGENTS.md` says read `node_modules/next/dist/docs/` before writing framework code.
-- **Supabase** (Postgres + Auth + Realtime + Storage) for data, auth, sync.
-- **Claude `claude-sonnet-4-6`**, server-side only, for generation.
-- **`ts-fsrs`** for scheduling, client-side.
+### Railway — ingestion service (LIVE)
+- Project **`carding-ingestion`** (id `93c0fe9d-e6b4-4134-835d-14b63ffd04b5`), service `carding-ingestion`, **Hobby plan** (required — Docling OOM'd on the 1 GB free cap).
+- **URL: `https://carding-ingestion-production.up.railway.app`** — `GET /health`, `POST /ingest` (multipart: file, mode), bearer-token auth (`INGESTION_SERVICE_TOKEN`).
+- Source = `services/ingestion-py/` (FastAPI `server.py` wrapping the same `convert()` as the CLI). Dockerfile bakes Docling weights in; **CPU-only torch** (no CUDA), **OCR disabled**, **converter cached** across requests. Verified live: MarkItDown (pdf/docx) + Docling (tables) all 200.
+- **Deploy = `railway up` from `services/ingestion-py/` (local upload), NOT GitHub-connected.** For auto-deploy on push: connect the repo in the dashboard, set Root Directory = `services/ingestion-py`. CLI logged in as `david@framewisehealth.com` (single workspace).
 
+### Env (`.env.local`, gitignored; in the root repo + each workspace)
+`NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_DB_PASSWORD`, `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT`, `CRON_SECRET`, `INGESTION_SERVICE_URL` (→ Railway), `INGESTION_SERVICE_TOKEN`. The app calls Railway when `INGESTION_SERVICE_URL` is set, else spawns the local Python sidecar (`uv sync` in `services/ingestion-py`). Never commit/echo these.
+
+## 5. What's built & merged (the integrated app on `main`)
+All six streams, reconciled and verified by a live headless walk:
+1. **collections** — collection CRUD, card move/bulk-move, library rewrite. Delete forces move-or-delete (no orphans).
+2. **generation-pipeline** — async **Batch** pipeline: chunk → per-chunk extract+draft → deterministic quality gates (the 4 CARD-QUALITY rules, no LLM-judge) → grounding → self-fix → persist; driven by `app/api/jobs/poll` + a realtime job page.
+3. **study-scheduling** — scheduled + cram modes, leech detection.
+4. **feedback-metrics** — `lib/feedback` (`selectFewShotExamples` few-shot loop), `lib/metrics` (edit-rate, retention, **graduation ladder**), `/metrics` dashboard.
+5. **ingestion** — PDF/Word → markdown via the Python sidecar / Railway service.
+6. **auth-pwa-reminders** — installable PWA, web-push daily reminders, auth hardening.
+
+**Reconciliations done during integration:** (a) generation consumes the canonical `lib/feedback` contract (stub deleted); (b) one shared `flagBadCard` (deduped study vs review); (c) file upload routes through the async pipeline via a shared `startDeckGeneration()`. Also fixed a real bug: the username `pattern` regex was invalid under Chromium's `v`-flag.
+
+## 6. Post-fan-out decisions — ALL SIGNED OFF (2026-06-11)
+Don't re-litigate:
+- **Graduation ladder = symmetric + hysteresis.** Review effort drops as the AI earns trust (review-all → spot-check <15% → trust <10%) and climbs back if quality regresses; a ±3-pt deadband prevents flip-flop. (`lib/metrics/config.ts`, `graduation.ts`.)
+- **Study "this card is bad"** logs `generation_feedback action='rejected'` (reason `[study]`), counts toward the edit rate — BUT **leeches do NOT auto-reject** (a hard-but-correct card isn't a generation failure); a leech only surfaces a banner; the user decides.
+- **Collection-view card edits count toward the edit rate** (tagged `[collection]`, grouped into a separate `collection-maintenance` batch so they don't rewrite generation-batch quality).
+- **Generation** = single Batch request per chunk (two-step collapsed; schema has one `anthropic_batch_id`). Keystone `prompt.ts` edited (two-step PROCESS, self-fix, per-chunk grounding) — reviewed, accepted.
+- **Ingestion: keep Docling**, deployed as its own Railway service (CPU torch, OCR off).
+- **Push storage** moved off Auth `user_metadata` → `push_subscriptions` table + `profiles.reminder_*` (migration applied; `lib/push` rewritten; cron queries only `reminder_enabled` profiles).
+
+## 7. 🎨 THE UI/UX DESIGN (converged — NOT yet built into the app)
+Major output of the latest sessions. The real app still has skeleton UI; **these mockups are the target to build.**
+
+### Where it lives — `.context/mockups/` (gitignored, local only)
+- **`index-web.html`** — desktop gallery (open in a browser).
+- **`index-mobile.html`** — mobile gallery with **pill navigation** (one screen at a time).
+- **`theme.css`** + **`tw-config.js`** — shared design tokens (source of truth for color/spacing/components); both accents wired via `data-accent` (**sage chosen**).
+- **`POLISH.md`** — researched visual-polish checklist (Refactoring UI, NN/g, WCAG AA, Material motion, Apple HIG, Linear/Vercel/Stripe). Apply during the real build.
+- `render-web.mjs` / `render-mobile.mjs` — Playwright renderers → PNGs in `/tmp/carding-shots/mockups/`.
+- **Chosen web screens:** `web-home-b`, `web-study-gate`, `web-study-a`, `web-review-a`, `web-new-a`, `web-deck-a`, `web-metrics-a`, `web-settings-a`. **Chosen mobile:** `mobile-{home,gate,study,review,new,generating,deck,metrics,settings}`. (Other `web-home-a/c`, `web-review-b`, `home/study/review/etc-*` alternatives = explored-and-discarded; ignore.)
+
+### Design language
+- **Accent: sage** (`--primary:#5e7d6e`). Warm-neutral base (`#faf9f7` / `#1c1917`), **Inter**. **shadcn/ui** is the chosen component base (NOT yet installed in the app). Minimal, frictionless, restrained accent; one radius token; subtle depth; tabular nums for counts.
+- **Terminology:** user-facing **"Decks"** (code stays `collections`).
+- **Count triplet** (Anki-style): `new + learning + due` = **blue `#2563eb` + red `#e11d48` + green `#16a34a`**.
+
+### Information architecture (a real shift from the current app)
+- **Decks home is the hub. Study is deck-by-deck** — NO global "study everything today." Tap a deck → quick **gate** (Study due N / Cram all) → study.
+- **Manage/edit a deck via a ⋯ menu**, not the primary tap (editing is de-prioritized — the AI should make good cards).
+- **Review** (triage of freshly-generated cards) appears contextually ("To triage"), not as a permanent nav item.
+- **Nav:** web = fixed full-height **left sidebar** (Decks · ＋New · To-triage Review · profile→Metrics/Settings); mobile = **bottom tab bar = Decks · New · Profile** (even thirds, no raised FAB; Metrics/Settings + Review behind Profile/contextual).
+
+### Per-screen decisions
+- **Decks home:** web = deck **grid** (`web-home-b`), tap = study, ⋯ = manage, due via accent ring + count. Mobile = clean **list** — **no due numbers, no "caught up"/"new" pills** (numbers are web-only); due-ness shown subtly (accent ring + filled play).
+- **New / capture:** drop-zone + paste, **NO "complex layout" switch** (parser auto-detects). Makes a **new deck** named from the doc.
+- **Generating:** async progress + live "N cards so far" + skeletons.
+- **Study gate:** after tapping a deck — "Study due N" (primary) vs "Cram all" (secondary).
+- **Study:** **card-less, Anki-style, text anchored at the TOP**, prompt & answer **same size**, **NO source shown**, **NO deck/Due-Cram header** (mode set at the gate). Compact grade buttons (Again/Hard/Good/Easy + intervals + keys 1–4); the colored `new+learning+due` triplet; quiet "this card is bad".
+- **Review:** **card-less, top-anchored**, term + definition **same size**, **NO source**, small **Reject / Edit / Keep chips** (+ arrow keys on web). NOTE: card-less = **no Tinder swipe** — chose keyboard/chips + minimalism (a minimal swipe card is the fallback if reconsidered).
+- **Deck detail (manage/edit):** cards **table** — Term / Definition / Status, **NO source column**; search; multi-select + bulk Move/Delete. Reached via ⋯.
+- **Metrics:** dashboard — graduation ladder, edit rate (lower=better), retention vs 90% target, per-deck.
+- **Settings:** daily reminders (toggle + time + tz) · PWA install · account.
+- **Grounding/source is still captured under the hood** (a quality signal) — just not shown in study/review/deck UI.
+
+### Polish (apply during the build — see `POLISH.md`)
+4px spacing scale; ≤~66ch measure; near-black/tinted neutrals; AA contrast; one-radius + nested-radius; 150–200ms ease-out motion + `prefers-reduced-motion`; `:focus-visible` rings; ≥44px hit targets; tabular nums; **fixed full-height sidebar, content-only scroll** (already in the web mockups).
+
+## 8. What's NOT done / next steps (priority order)
+1. **Build the converged UI in the real app** (the big one): install **shadcn/ui** + the sage theme tokens, then implement screen-by-screen per the mockups. Suggested order: nav shell + Decks home → study gate → study → review → new/generating → deck detail → metrics → settings. This realizes the **IA shift** (deck-by-deck study, the gate, card-less study/review, "Decks" terminology) — the current app's study is global/scheduled and review is the old button UI.
+2. **Seed 3–5 example "good cards"** so `selectFewShotExamples` matches the user's taste from day one (loop works; no taste examples yet).
+3. **Reminder cron:** nothing calls `/api/cron/reminders` yet. Set up **Supabase `pg_cron` + `pg_net`** (small serialized migration) to hit it with `CRON_SECRET`.
+4. **Deploy the Next app** (e.g. Vercel): set all env vars there incl. `INGESTION_SERVICE_URL` + token; optionally GitHub-connect the Railway service.
+5. Optional: write `docs/DESIGN.md` (design principles + picks; currently captured here + `.context/mockups/`); prune merged branches.
+
+## 9. File map (key paths)
 ```
-docs/                     frozen + living specs (see §9)
-CLAUDE.md                 anti-drift rule + doc hierarchy (imports AGENTS.md)
-.conductor/settings.toml  Conductor setup/run + file copy
-proxy.ts                  Next 16 "proxy" (session refresh + auth gating)
-lib/supabase/             client.ts (browser) / server.ts / admin.ts (service role) / proxy.ts (updateSession)
-lib/types/                database.ts (generated from schema) + domain.ts (aliases + GeneratedCard)
-lib/generation/           prompt.ts (= CARD-QUALITY rubric) + generate.ts (Sonnet structured-output call)
-lib/auth/                 username.ts (username→synthetic email), types.ts
-lib/scheduling/           fsrs.ts (ts-fsrs wrapper, schedule())
-app/(auth)/               login/, signup/, actions.ts
-app/(app)/                layout.tsx (nav + auth guard), library/, new/, review/, study/
-supabase/migrations/      20260611094838_init_schema.sql
-scripts/                  smoke-gen.ts (gen check), walk.mjs (Playwright e2e), cleanup-test-users.mjs
+docs/                      frozen (VISION, CARD-QUALITY, METRICS, SCHEDULING) + living (PIPELINE, ARCHITECTURE, BUILD-PLAN, FUTURE-IDEAS)
+app/(app)/                 library, collections/[id], new + new/[jobId], review, study, metrics, settings  (+ layout.tsx nav)
+app/(auth)/                login, signup, actions.ts
+app/api/                   jobs/poll (generation), cron/reminders (web-push)
+lib/generation/            anthropic, chunk, gates, process, selffix, submit, prompt (= CARD-QUALITY for the model)
+lib/feedback/              examples.ts (selectFewShotExamples) + index.ts   ← cross-stream contract
+lib/metrics/               config, edit-rate, retention, graduation, server
+lib/scheduling/            fsrs.ts, leech.ts
+lib/push/                  store.ts, reminders.ts, web-push.ts, types.ts   (now on Postgres tables)
+lib/ingestion/             index.ts (TS adapter: Railway HTTP when INGESTION_SERVICE_URL set, else spawn the CLI)
+services/ingestion-py/     ingest.py (CLI), server.py (FastAPI), Dockerfile, railway.json, prefetch_docling.py
+supabase/migrations/       20260611094838_init_schema.sql, 20260611120000_push_subscriptions.sql
+.context/mockups/          ← THE UI/UX DESIGN: theme.css, tw-config.js, index-web.html, index-mobile.html, web-*.html, mobile-*.html, POLISH.md
+scripts/                   smoke-gen, smoke-ingest, walk*.mjs, verify-*, cleanup-test-users
 ```
 
-## 6. Supabase
-- Project **`carding`**, ref **`tmqgknkshpkxojvdhejq`**, region `us-east-1`, org `Framewise Health` (`kzvhxeerxutujfgycfla`). `ACTIVE_HEALTHY`.
-- The Supabase **CLI is logged in** on this Mac (`~/.supabase`), so `supabase` commands work for any workspace.
-- **Schema** (one migration): tables `profiles, collections, sources, cards, generation_jobs, generation_feedback, study_reviews`. **Owner-only RLS** on every table (`auth.uid() = user_id`). Private **`card-images`** storage bucket (owner-scoped by `<user_id>/` path). Realtime enabled on `generation_jobs`. `cards` carries the FSRS columns.
-- **Manage:** edit/add a migration under `supabase/migrations/`, then `supabase db push`. Regenerate types: `supabase gen types typescript --linked > lib/types/database.ts`. **The schema is FROZEN for the fan-out** — any change must be one serialized migration coordinated with the human, never parallel.
+## 10. Run / build / verify
+- `pnpm install`; dev `pnpm dev`; typecheck `pnpm exec tsc --noEmit`; build `pnpm build` (both clean on `main`).
+- Generation smoke: `set -a; . ./.env.local; set +a; pnpm exec tsx scripts/smoke-gen.ts`.
+- Ingestion (local sidecar): `uv sync` in `services/ingestion-py`, then `pnpm exec tsx scripts/smoke-ingest.ts`. Or Railway: `curl https://carding-ingestion-production.up.railway.app/health`.
+- Push storage: `pnpm exec tsx scripts/verify-push.ts`. Full loop: `node scripts/walk.mjs` (Playwright; shots → `/tmp/carding-shots/`).
+- View the design: open `.context/mockups/index-web.html` and `index-mobile.html` in a browser.
+- **Discipline: prove changes by running the app, not just typechecking.**
 
-## 7. Generation core
-- `lib/generation/prompt.ts` is **`docs/CARD-QUALITY.md` expressed for the model** — the single definition of a good card, reused as the generation prompt (and meant to be reused as the grounding gate + eval rubric). Output is structured (`output_config.format` JSON schema): `{ cards: [{ term, definition, source_span }] }`.
-- Card model: **one term + one atomic fact**; rich entities decompose into **many same-term cards**; every card carries a verbatim `source_span` (grounding). Default review direction is **fact → recall the term** (so shared terms aren't ambiguous). Generous inclusion bar.
-- Skeleton generation is **synchronous** (one Sonnet call in a server action). The real pipeline (async Batch, chunking, deterministic gates, grounding verification, self-fix, feedback loop) is the **generation-pipeline fan-out stream**.
+## 11. Gotchas
+- Next 16 renamed middleware → **`proxy.ts`** (function `proxy`). · `create-next-app` clobbers `CLAUDE.md` — restore it. · tsx + CJS needs `.mjs`/async IIFE.
+- **Railway:** free-tier 1 GB cap OOMs Docling → Hobby required. CUDA torch bloated the image (~6 GB) → CPU-only torch. `railway.json` must NOT set a `$PORT` startCommand without shell expansion (the Dockerfile `CMD` owns it). Image bakes models → warm cold-start.
+- **Mockups** use the Tailwind Play CDN + `theme.css`; accent flips via `?accent=sage|crimson` (sage chosen). Galleries cache iframes — hard-refresh (Cmd+Shift+R) after edits.
+- `lib/feedback` is the contract both feedback-metrics and generation depend on — change its signature deliberately.
 
-## 8. Auth
-Username/password with no email step: the username maps to a synthetic email `<user>@carding.local` (`lib/auth/username.ts`); signup uses the **admin client** to `createUser({ email_confirm: true })`, inserts a `profiles` row, then signs in. `proxy.ts` refreshes the session and gates routes (unauth → `/login`; auth on `/login|/signup|/` → `/library`).
+## 12. Credentials & access
+`.env.local` holds all secrets (§4). Supabase CLI logged in (`~/.supabase`); `gh` authed; Railway CLI logged in (`david@framewisehealth.com`). Never commit/echo any of these.
 
-## 9. The docs system (read these)
-**🔒 Frozen (do not drift through v1):** `VISION`, `CARD-QUALITY` (keystone), `METRICS`, `SCHEDULING`.
-**Living (contract-level; code is truth for details):** `PIPELINE`, `ARCHITECTURE`, `BUILD-PLAN`, `FUTURE-IDEAS`.
-**Anti-drift rule (`CLAUDE.md`):** docs = intent/contracts, code = implementation truth; if code must diverge from a frozen doc, **flag it, don't silently rewrite**.
-
-## 10. Metrics & feedback loop
-- **North stars:** near-term = **card quality = edit rate** (metric B); long-term = **retention** (metric A). See `docs/METRICS.md`.
-- **No LLM-as-judge.** Quality = deterministic gates + grounding + human review + the feedback loop.
-- **Feedback loop = dynamic few-shot** (NOT fine-tuning): the user's kept/edited cards are injected into future generation prompts.
-- **HITL graduation ladder:** review-all → spot-check at <15% edit rate → trust at <10%.
-- **Live cross-stream contract (from the feedback+metrics stream, branch `albuquerque-v2`):**
-  - `lib/feedback` exports **`selectFewShotExamples({ client, userId, sourceText?, collectionId?, limit? }) → FewShotExample[]`** where `FewShotExample = { term, definition, kind: 'kept'|'edited', before }`, best-first, ~half the slots reserved for edits. **The generation-pipeline stream must consume this exact signature.**
-  - That stream also lives in `lib/metrics/`, `app/(app)/metrics/`, and the review/study surfaces; thresholds in `lib/metrics/config.ts`.
-  - Two decisions it **flagged as extensions to frozen METRICS.md** (need human sign-off): (1) the ladder is **symmetric** (effort rises again if quality regresses); (2) a study-time **"this card is bad"** flag logs to `generation_feedback` as `action='rejected'` with reason prefixed `[study]`, so it both trains the loop and counts toward the edit rate.
-
-## 11. Build plan & fan-out
-`docs/BUILD-PLAN.md` defines the phasing and per-stream file ownership. Foundation + skeleton are done; now the six streams run in parallel, each in its own Conductor workspace branched from `main`. Kickoff prompts: **`~/Downloads/carding-fanout-prompts/`** (`00-README` + `01`–`06`).
-1. **ingestion** — PDF/Word → markdown (Python sidecar: MarkItDown + Docling).
-2. **generation-pipeline** — async Batch + gates + grounding + self-fix + the few-shot loop (consumes `selectFewShotExamples`).
-3. **study-scheduling** — FSRS scheduled + cram modes, leeches, uncapped new cards.
-4. **collections** — CRUD + move cards.
-5. **auth-pwa-reminders** — installable PWA + daily reminders.
-6. **feedback-metrics** — metrics + graduation ladder + `lib/feedback` + review polish. **(in progress, `albuquerque-v2`)**
-
-**Coordination points:** `app/(app)/new/` (ingestion ↔ generation); the `selectFewShotExamples` signature (generation ↔ feedback-metrics); `app/(app)/review/` and study surfaces (feedback-metrics owns these). Merge PRs **one at a time**; expect small `package.json` conflicts.
-
-## 12. Run / build / verify locally
-From a workspace with `.env.local` present:
-- Install: `pnpm install`
-- Dev: `pnpm dev` (or `pnpm exec next dev -p <port>`)
-- Typecheck: `pnpm exec tsc --noEmit` · Build: `pnpm build`
-- Generation smoke (no browser): `set -a; . ./.env.local; set +a; pnpm exec tsx scripts/smoke-gen.ts`
-- Full e2e walk (browser): start dev server, then `node scripts/walk.mjs` (Playwright + Chromium installed). Screenshots → `/tmp/carding-shots/`.
-- Per the verify discipline: prove changes by **running the app**, not by typechecking.
-
-## 13. Conductor operational notes
-- Config is **`.conductor/settings.toml`** (TOML; `conductor.json` is legacy — don't use it). `setup = pnpm install`, `run = pnpm dev --port $CONDUCTOR_PORT`, `run_mode = concurrent` (safe — each workspace gets its own port; Supabase is remote).
-- **`.env.local` is gitignored** and is copied into new workspaces via `file_include_globs = ".env.local\n.env*.local"`. Conductor copies it **from the root repo dir** (`CONDUCTOR_ROOT_PATH`) — which now has it. If a new workspace is missing it, copy from `/Users/davidcui824/conductor/repos/flashcarding/.env.local`.
-- New workspaces fetch `origin` first, so they branch from the **merged** `main` even though the root's local checkout is behind.
-
-## 14. Credentials & access
-- `.env.local` (gitignored; in the root + each workspace) holds: `ANTHROPIC_API_KEY`, `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY` (bypasses RLS — server-only), `SUPABASE_DB_PASSWORD`. Never commit or echo these.
-- Supabase CLI logged in (`~/.supabase`). `gh` CLI is authed (used to push + open/merge PR #1).
-
-## 15. Known limitations (what the skeleton intentionally fakes)
-- Generation is **synchronous** (blocks ~20s); real one is async Batch (stream 02).
-- Input is **paste/markdown only**; PDF/Word is stream 01.
-- Review is **buttons**, not swipe; the Tinder swipe + "trust mode" is stream 06.
-- No collections management UI beyond a list (stream 04), no PWA/reminders (stream 05), no metrics views yet (stream 06).
-- No images yet (front/back image support is planned; bucket + columns exist).
-
-## 16. Gotchas encountered (so you don't re-hit them)
-- **zsh `:r`:** `"$var:refs/..."` is parsed as a zsh modifier — use `"${var}:refs/..."`.
-- **Next 16 renamed middleware → `proxy.ts`** (function `proxy`); `middleware.ts` only warns.
-- **create-next-app clobbers `CLAUDE.md`** with an `@AGENTS.md` stub when scaffolding into an existing dir — restore it.
-- **tsx + CJS:** top-level `await` needs `.mjs` or an async IIFE.
-- **PR base:** `main` didn't exist on the remote until pushed from the initial commit.
-
-## 17. Open items needing the human
-- Sign off (or adjust) the two METRICS extensions in §10 (symmetric ladder; study-flag → reject).
-- Provide **3–5 example "good cards"** to seed `selectFewShotExamples` so generation matches the user's taste from day one.
-- Decide reverse-card behavior details for multi-fact terms when the study stream deepens.
-
-## 18. Memory & where to look
-Auto-memory at `~/.claude/projects/-Users-davidcui824-conductor-repos-flashcarding/memory/`: `carding-project.md` (decisions + build state), `carding-research-2026.md` (tooling research), `carding-feedback-metrics-stream.md` (the live contract above). Start any new session by reading `CLAUDE.md` + `docs/`.
+## 13. Memory
+Auto-memory at `~/.claude/projects/-Users-davidcui824-conductor-repos-flashcarding/memory/`: `carding-project.md`, `carding-research-2026.md`, `carding-feedback-metrics-stream.md` (the last now records the signed-off post-fan-out decisions). Start a new session by reading `CLAUDE.md` + `docs/` + this handoff + `.context/mockups/` (for the design).

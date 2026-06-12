@@ -1,6 +1,6 @@
 # SCHEDULING 🔒 (frozen)
 
-Carding copies modern Anki's spaced-repetition behavior. We do not invent a scheduler.
+Cardstock copies modern Anki's spaced-repetition behavior. We do not invent a scheduler.
 
 ## Algorithm: FSRS
 - Use **FSRS** (Free Spaced Repetition Scheduler) — the algorithm modern Anki ships with. Via the `ts-fsrs` library, running **client-side** so review works without a round-trip.

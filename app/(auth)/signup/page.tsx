@@ -11,7 +11,7 @@ export default function SignupPage() {
   return (
     <main className="min-h-screen flex items-center justify-center p-6">
       <form action={action} className="w-full max-w-sm space-y-4">
-        <h1 className="text-2xl font-semibold">Create your Carding account</h1>
+        <h1 className="text-2xl font-semibold">Create your Cardstock account</h1>
 
         <div className="space-y-1">
           <label htmlFor="username" className="block text-sm font-medium">

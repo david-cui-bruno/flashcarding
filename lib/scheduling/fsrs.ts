@@ -18,7 +18,22 @@ const STATE_TO_NUM: Record<string, State> = {
 };
 const NUM_TO_STATE = ["new", "learning", "review", "relearning"] as const;
 
-function toFsrsCard(c: Card): FsrsCard {
+// Just the FSRS columns the scheduler reads — lets callers pass a column subset
+// (e.g. the study queue's projection) without the full cards row.
+export type SchedulableCard = Pick<
+  Card,
+  | "due"
+  | "stability"
+  | "difficulty"
+  | "elapsed_days"
+  | "scheduled_days"
+  | "reps"
+  | "lapses"
+  | "fsrs_state"
+  | "last_review"
+>;
+
+function toFsrsCard(c: SchedulableCard): FsrsCard {
   return {
     due: new Date(c.due),
     stability: c.stability,
@@ -47,7 +62,7 @@ export type FsrsUpdate = {
 };
 
 // grade: 1 Again, 2 Hard, 3 Good, 4 Easy — maps directly to FSRS Rating values.
-export function schedule(card: Card, grade: 1 | 2 | 3 | 4, now: Date = new Date()): FsrsUpdate {
+export function schedule(card: SchedulableCard, grade: 1 | 2 | 3 | 4, now: Date = new Date()): FsrsUpdate {
   const { card: u } = scheduler.next(toFsrsCard(card), now, grade as Grade);
   return {
     due: u.due.toISOString(),
@@ -60,4 +75,28 @@ export function schedule(card: Card, grade: 1 | 2 | 3 | 4, now: Date = new Date(
     fsrs_state: NUM_TO_STATE[u.state],
     last_review: (u.last_review ?? now).toISOString(),
   };
+}
+
+// Short human label for an interval (Anki-style: <1m, 6m, 2h, 2d, 3mo, 1y).
+function humanInterval(fromMs: number, toMs: number): string {
+  const mins = Math.round((toMs - fromMs) / 60000);
+  if (mins < 1) return "<1m";
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.round(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  const d = Math.round(hrs / 24);
+  if (d < 30) return `${d}d`;
+  const mo = Math.round(d / 30);
+  if (mo < 12) return `${mo}mo`;
+  return `${Math.round(mo / 12)}y`;
+}
+
+export type GradePreview = { again: string; hard: string; good: string; easy: string };
+
+// The interval each grade would schedule next, for the study screen's grade buttons.
+// Computed server-side so ts-fsrs never ships to the client.
+export function previewIntervals(card: SchedulableCard, now: Date = new Date()): GradePreview {
+  const log = scheduler.repeat(toFsrsCard(card), now);
+  const at = (g: 1 | 2 | 3 | 4) => humanInterval(now.getTime(), log[g as Grade].card.due.getTime());
+  return { again: at(1), hard: at(2), good: at(3), easy: at(4) };
 }

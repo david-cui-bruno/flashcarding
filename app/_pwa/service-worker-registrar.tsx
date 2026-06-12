@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 
-// Registers the service worker so Carding is installable and can receive pushes.
+// Registers the service worker so Cardstock is installable and can receive pushes.
 // Renders nothing; mounted once in the root layout.
 export function ServiceWorkerRegistrar() {
   useEffect(() => {

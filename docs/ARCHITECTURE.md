@@ -35,7 +35,7 @@ Stack and system boundaries. This is the most drift-prone doc — it is kept at 
 - **Generation job** — async batch status the client subscribes to.
 
 ## Cost (informational — not a v1 constraint)
-Sonnet 4.6 is $3 / 1M input tokens, $15 / 1M output. Generating ~100 cards from a ~10–15 page source is roughly **$0.35** (about half a cent per card), ~halved with the Batch API. Negligible at personal scale; only relevant if Carding becomes a multi-user product.
+Sonnet 4.6 is $3 / 1M input tokens, $15 / 1M output. Generating ~100 cards from a ~10–15 page source is roughly **$0.35** (about half a cent per card), ~halved with the Batch API. Negligible at personal scale; only relevant if Cardstock becomes a multi-user product.
 
 ## Auth
 Username/password via Supabase Auth — deliberately simple. Needed even for a personal tool because cross-device sync requires an account.

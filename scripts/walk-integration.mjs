@@ -1,4 +1,4 @@
-// Live end-to-end walk of the INTEGRATED Carding loop (all six streams) via Playwright.
+// Live end-to-end walk of the INTEGRATED Cardstock loop (all six streams) via Playwright.
 // Async generation: paste → /new/[jobId] (polls the Batch) → /review → study → metrics.
 // Usage: BASE_URL=http://localhost:PORT node scripts/walk-integration.mjs
 import { chromium } from "playwright";

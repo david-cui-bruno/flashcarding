@@ -1,27 +1,25 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "./_pwa/service-worker-registrar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Inter is the design's typeface (see .context/mockups/theme.css). Loaded as a
+// CSS variable so globals.css can reference it via --font-sans.
+const inter = Inter({
+  variable: "--font-sans",
   subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
 });
 
 // Next auto-injects <link rel="manifest"> from app/manifest.ts; appleWebApp +
 // icons.apple add the iOS home-screen / installable-PWA meta tags.
 export const metadata: Metadata = {
-  title: { default: "Carding", template: "%s · Carding" },
+  title: { default: "Cardstock", template: "%s · Cardstock" },
   description: "Turn documents into high-quality flashcards and study them on a spaced schedule.",
-  applicationName: "Carding",
+  applicationName: "Cardstock",
   appleWebApp: {
     capable: true,
-    title: "Carding",
+    title: "Cardstock",
     statusBarStyle: "default",
   },
   icons: {
@@ -46,10 +44,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="en" className={`${inter.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegistrar />

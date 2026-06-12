@@ -2,6 +2,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { getReviewMode } from "@/lib/metrics/server";
 import { partitionPendingForReview } from "@/lib/metrics/graduation";
+import { Button } from "@/components/ui/button";
 import { ReviewClient } from "./review-client";
 
 export default async function ReviewPage() {
@@ -19,17 +20,20 @@ export default async function ReviewPage() {
 
   if (!cards || cards.length === 0) {
     return (
-      <p className="text-neutral-500">
-        No cards to review.{" "}
-        <Link href="/new" className="underline">
-          Generate more
-        </Link>{" "}
-        or{" "}
-        <Link href="/study" className="underline">
-          study
-        </Link>
-        .
-      </p>
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-xl font-medium">No cards to review.</p>
+        <p className="text-sm text-muted-foreground">
+          Freshly generated cards land here for a quick triage.
+        </p>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/new">Generate more</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/library">Back to decks</Link>
+          </Button>
+        </div>
+      </div>
     );
   }
 

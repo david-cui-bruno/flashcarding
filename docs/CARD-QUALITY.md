@@ -1,6 +1,6 @@
 # CARD-QUALITY 🔒 (frozen) — the keystone
 
-This is the single source of truth for what a good Carding card is. Its contents are reused three ways: the **generation prompt's instructions**, the **quality gate**, and the **evaluation rubric**. Change card quality here and nowhere else.
+This is the single source of truth for what a good Cardstock card is. Its contents are reused three ways: the **generation prompt's instructions**, the **quality gate**, and the **evaluation rubric**. Change card quality here and nowhere else.
 
 ## The card model
 A card is:

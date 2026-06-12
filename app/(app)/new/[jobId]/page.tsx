@@ -15,25 +15,28 @@ export default async function GeneratingPage({
 
   const { data: job } = await supabase
     .from("generation_jobs")
-    .select("id, status, cards_generated, error")
+    .select("id, status, cards_generated, error, sources(title)")
     .eq("id", jobId)
     .single();
 
   if (!job) {
     return (
-      <p className="text-neutral-500">
-        That generation job wasn&apos;t found.{" "}
-        <Link href="/new" className="underline">
+      <div className="flex flex-col items-center justify-center gap-4 p-10 text-center md:pt-24">
+        <p className="text-xl font-medium">That generation job wasn&apos;t found.</p>
+        <Link href="/new" className="text-sm text-primary underline">
           Start a new one
         </Link>
-        .
-      </p>
+      </div>
     );
   }
+
+  // Supabase types the to-one join as an array; take the first.
+  const source = Array.isArray(job.sources) ? job.sources[0] : job.sources;
 
   return (
     <GeneratingClient
       jobId={job.id}
+      title={source?.title ?? "your document"}
       initialStatus={job.status}
       initialCardsGenerated={job.cards_generated}
       initialError={job.error}

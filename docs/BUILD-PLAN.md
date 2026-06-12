@@ -1,6 +1,6 @@
 # BUILD-PLAN (living)
 
-How we build Carding with parallel Conductor agents without merge collisions. This is the coordination doc: it defines the phases, the serialization points, and **which files each parallel stream owns** so agents don't step on each other.
+How we build Cardstock with parallel Conductor agents without merge collisions. This is the coordination doc: it defines the phases, the serialization points, and **which files each parallel stream owns** so agents don't step on each other.
 
 ## The two constraints that govern everything
 1. **Shared files → merge conflicts.** Each Conductor workspace is its own worktree+branch, merged via PR. Agents must own **non-overlapping files**.

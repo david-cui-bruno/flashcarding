@@ -1,4 +1,4 @@
-# Carding
+# Cardstock
 
 Turn documents into high-quality, atomic flashcards with AI, and study them on an
 Anki-style spaced-repetition schedule (FSRS). See `docs/` for the spec — start with
@@ -28,7 +28,7 @@ pnpm build        # production build
 
 ## PWA (installable app)
 
-Carding is an installable PWA — one codebase for desktop and mobile, no Electron
+Cardstock is an installable PWA — one codebase for desktop and mobile, no Electron
 (offline review is v2).
 
 - **Manifest:** `app/manifest.ts` → served at `/manifest.webmanifest` (Next injects the
