@@ -162,9 +162,22 @@ export function ReviewClient({
                   value={reason}
                   onChange={(e) => setReason(e.target.value)}
                   rows={2}
-                  placeholder="What was wrong? (optional — feeds the generator)"
+                  placeholder="What was wrong? (optional — helps tune future cards)"
                   autoFocus
                 />
+                {/* Nudge salvageable cards toward an edit: a before→after fix is a far
+                    stronger signal for the generator than a reject (see docs/DESIGN.md). */}
+                <p className="text-[0.76rem] text-muted-foreground">
+                  Fixable?{" "}
+                  <button
+                    type="button"
+                    onClick={startEdit}
+                    className="font-medium text-foreground underline underline-offset-2"
+                  >
+                    Edit it instead
+                  </button>{" "}
+                  — your fix teaches the generator better than a reject.
+                </p>
                 <div className="flex gap-2">
                   <Button variant="destructive" size="sm" onClick={confirmReject}>
                     Confirm reject
