@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-// The Cardstock mark — a card with a flap, matching .context/mockups.
+// The Dory mark — a card with a flap, matching .context/mockups.
 export function Logo({ className, size = 22 }: { className?: string; size?: number }) {
   return (
     <svg

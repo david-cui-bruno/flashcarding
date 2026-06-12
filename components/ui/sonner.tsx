@@ -9,7 +9,7 @@ import {
 } from "lucide-react"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 
-// Light-only: the Cardstock design has no dark mode / theme toggle, so we skip the
+// Light-only: the Dory design has no dark mode / theme toggle, so we skip the
 // next-themes dependency and pin the toaster to light.
 const Toaster = ({ ...props }: ToasterProps) => {
   return (

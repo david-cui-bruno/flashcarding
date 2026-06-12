@@ -79,7 +79,7 @@ function Sidebar({ username, triageCount }: { username: string; triageCount: num
     <aside className="sticky top-0 hidden h-screen w-62 flex-none flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex">
       <Link href="/library" className="flex items-center gap-2 px-2 pb-5 pt-2">
         <Logo />
-        <span className="text-lg font-semibold tracking-tight">Cardstock</span>
+        <span className="text-lg font-medium tracking-tight">Dory</span>
       </Link>
 
       <nav className="flex flex-col gap-1">

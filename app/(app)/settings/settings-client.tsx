@@ -237,7 +237,7 @@ export function SettingsClient({
                       </p>
                     ) : needsInstallOnIOS ? (
                       <p className="text-sm text-info">
-                        On iPhone/iPad, install Cardstock first (below), then enable notifications from
+                        On iPhone/iPad, install Dory first (below), then enable notifications from
                         the installed app.
                       </p>
                     ) : (
@@ -275,17 +275,17 @@ export function SettingsClient({
             </div>
           </section>
 
-          {/* Install Cardstock (PWA) */}
+          {/* Install Dory (PWA) */}
           {!isStandalone && (
             <section>
-              <h2 className="mb-3 text-sm font-semibold">Install Cardstock</h2>
+              <h2 className="mb-3 text-sm font-semibold">Install Dory</h2>
               <div className="rounded-xl border border-border bg-card px-5 py-5">
                 <div className="flex items-center gap-4">
                   <span className="flex size-[46px] flex-none items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_8px_18px_-6px_rgba(94,125,110,.55)]">
                     <Logo size={24} className="text-primary-foreground" />
                   </span>
                   <div className="flex-1 leading-snug">
-                    <div className="text-sm font-medium">Keep Cardstock one click away</div>
+                    <div className="text-sm font-medium">Keep Dory one click away</div>
                     <div className="mt-0.5 text-[0.82rem] text-muted-foreground">
                       Install it as an app — opens in its own window and works offline for review.
                     </div>
@@ -301,7 +301,7 @@ export function SettingsClient({
                   <>
                     <hr className="my-4 border-border" />
                     <p className="text-[0.78rem] leading-relaxed text-muted-foreground">
-                      On iPhone, open Cardstock in Safari, tap Share, then &ldquo;Add to Home Screen.&rdquo;
+                      On iPhone, open Dory in Safari, tap Share, then &ldquo;Add to Home Screen.&rdquo;
                     </p>
                   </>
                 )}
@@ -343,7 +343,7 @@ export function SettingsClient({
             </div>
           </section>
 
-          <p className="pt-1 text-center text-[0.74rem] text-muted-foreground">Cardstock · v1</p>
+          <p className="pt-1 text-center text-[0.74rem] text-muted-foreground">Dory · v1</p>
         </div>
       </div>
     </div>
