@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +39,6 @@ export function ReviewClient({
 }) {
   const router = useRouter();
   const [i, setI] = useState(0);
-  const [busy, setBusy] = useState(false);
   const [panel, setPanel] = useState<"none" | "edit" | "reject">("none");
   const [term, setTerm] = useState("");
   const [definition, setDefinition] = useState("");
@@ -52,16 +52,14 @@ export function ReviewClient({
   }, [autoAcceptIds]);
 
   const card = i < cards.length ? cards[i] : null;
-  const interactive = card !== null && !busy && panel === "none";
+  const interactive = card !== null && panel === "none";
 
-  async function commit(fn: () => Promise<void>) {
-    if (busy) return;
-    setBusy(true);
-    await fn();
+  // Optimistic: advance immediately, persist the triage decision in the background.
+  function commit(fn: () => Promise<void>) {
+    void fn().catch(() => toast.error("Couldn't save that — try again."));
     setI((n) => n + 1);
     setPanel("none");
     setReason("");
-    setBusy(false);
   }
 
   const keep = () => card && commit(() => keepCard(card.id));
@@ -140,10 +138,8 @@ export function ReviewClient({
             <Textarea id="r-def" value={definition} onChange={(e) => setDefinition(e.target.value)} rows={3} />
           </div>
           <div className="flex gap-2 pt-1">
-            <Button disabled={busy} onClick={saveEdit}>
-              Save &amp; keep
-            </Button>
-            <Button variant="ghost" disabled={busy} onClick={() => setPanel("none")}>
+            <Button onClick={saveEdit}>Save &amp; keep</Button>
+            <Button variant="ghost" onClick={() => setPanel("none")}>
               Cancel
             </Button>
           </div>
@@ -170,10 +166,10 @@ export function ReviewClient({
                   autoFocus
                 />
                 <div className="flex gap-2">
-                  <Button variant="destructive" size="sm" disabled={busy} onClick={confirmReject}>
+                  <Button variant="destructive" size="sm" onClick={confirmReject}>
                     Confirm reject
                   </Button>
-                  <Button variant="ghost" size="sm" disabled={busy} onClick={() => setPanel("none")}>
+                  <Button variant="ghost" size="sm" onClick={() => setPanel("none")}>
                     Cancel
                   </Button>
                 </div>
