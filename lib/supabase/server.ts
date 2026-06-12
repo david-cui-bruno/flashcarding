@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { longLived } from "./cookies";
 
 // Server Supabase client (anon key + user session via cookies). RLS-enforced.
 // In Next.js 16 `cookies()` is async.
@@ -16,7 +17,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, longLived(value, options)),
             );
           } catch {
             // Called from a Server Component — safe to ignore when middleware refreshes the session.
