@@ -14,6 +14,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/types/database";
+import { SEED_EXAMPLES } from "./seed-examples";
 
 export type CardText = { term: string; definition: string };
 
@@ -68,7 +69,7 @@ export async function selectFewShotExamples(
     .in("action", ["kept", "edited"])
     .order("created_at", { ascending: false })
     .limit(candidatePool);
-  if (error || !data) return [];
+  if (error || !data) return SEED_EXAMPLES.slice(0, limit); // fall back to house style
 
   const sourceTokens = tokenize(sourceText ?? "");
   const rows = data as unknown as FeedbackRow[];
@@ -94,7 +95,24 @@ export async function selectFewShotExamples(
     if (chosen.size >= limit) break;
     chosen.add(s);
   }
-  return [...chosen].sort((a, b) => b.score - a.score).map((s) => s.example);
+  const result = [...chosen].sort((a, b) => b.score - a.score).map((s) => s.example);
+
+  // Backfill with curated house-style seeds (lib/feedback/seed-examples.ts) so the
+  // generator has taste from day one. Seeds go last (lowest priority) and only fill
+  // slots the user's own kept/edited examples didn't — so real history takes over as
+  // it grows past `limit`.
+  if (result.length < limit) {
+    const have = new Set(result.map((e) => `${e.term}\n${e.definition}`.toLowerCase()));
+    for (const seed of SEED_EXAMPLES) {
+      if (result.length >= limit) break;
+      const key = `${seed.term}\n${seed.definition}`.toLowerCase();
+      if (!have.has(key)) {
+        result.push(seed);
+        have.add(key);
+      }
+    }
+  }
+  return result;
 }
 
 type Scored = { example: FewShotExample; score: number };
