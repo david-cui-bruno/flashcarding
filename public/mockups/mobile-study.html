@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carding – Mobile Study (mockup)</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #f9f9f8;
+      --surface:    #ffffff;
+      --border:     #e4e4e4;
+      --text:       #1a1a1a;
+      --text-sub:   #666666;
+      --text-muted: #999999;
+      --sage:       #7c9a7e;
+      --sage-light: #edf3ee;
+      --accent:     #1a1a1a;
+      --red:        #dc2626;
+      --amber:      #d97706;
+      --blue:       #2563eb;
+      --green:      #16a34a;
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  16px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.5;
+      max-width: 390px;
+      margin: 0 auto;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ─── Status bar ─── */
+    .status-bar {
+      height: 44px;
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      justify-content: space-between;
+    }
+
+    /* ─── Study header ─── */
+    .study-header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;  /* BUG: 12px top/bottom but FAB and cards use 16px — minor inconsistency */
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .back-btn {
+      width: 36px;
+      height: 36px;
+      /* BUG: tap target below 44px */
+      border: none;
+      background: transparent;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--text-sub);
+      border-radius: var(--radius-sm);
+      /* BUG: no :hover/:active/:focus-visible state */
+    }
+    .back-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke-width: 2;  /* BUG: different stroke-width than nav icons (1.5) */
+    }
+    .study-title {
+      flex: 1;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      letter-spacing: 0; /* BUG: heading missing -0.01em letter-spacing */
+    }
+    .study-progress-text {
+      font-size: 13px;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      /* BUG: progress counter missing font-variant-numeric: tabular-nums */
+    }
+
+    /* ─── Progress bar ─── */
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      /* BUG: progress track is pure gray (#e4e4e4), not a tinted neutral */
+    }
+    .progress-fill {
+      height: 100%;
+      width: 33%;
+      background: var(--sage);
+      /* BUG: no transition on progress-fill width change */
+    }
+
+    /* ─── Card area ─── */
+    .card-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 20px 16px;
+      gap: 16px;
+    }
+
+    /* ─── Flashcard ─── */
+    .flashcard {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      min-height: 260px;
+      padding: 32px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      /* BUG: no box-shadow for elevation differentiation */
+    }
+    .card-face-label {
+      position: absolute;
+      top: 16px;
+      left: 20px;
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      /* BUG: contrast ratio of #999 on #fff is ~2.8:1 — fails WCAG AA 4.5:1 */
+    }
+    .card-definition {
+      font-size: 17px;
+      color: var(--text);
+      line-height: 1.55;
+      max-width: 280px;
+    }
+    .card-divider {
+      width: 40px;
+      height: 1px;
+      background: var(--border);
+      margin: 20px auto;
+    }
+    .card-term {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+      /* BUG: heading line-height 1.25 is acceptable but letter-spacing: -0.02em is missing */
+    }
+    .card-source {
+      position: absolute;
+      bottom: 14px;
+      left: 20px;
+      right: 20px;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-align: left;
+      border-left: 2px solid var(--border);
+      padding-left: 8px;
+      line-height: 1.4; /* BUG: line-height below 1.5 */
+      /* BUG: border-left uses pure #e4e4e4, not a sage-tinted neutral */
+    }
+
+    /* ─── Flip hint ─── */
+    .flip-hint {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text-muted);
+      /* BUG: #999 on #f9f9f8 ≈ 2.5:1 — fails WCAG AA */
+    }
+
+    /* ─── Grade buttons ─── */
+    .grade-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      /* BUG: 8px gap works but gives only 4px visual margin inside each button given 4px padding */
+    }
+    .grade-btn {
+      border-radius: var(--radius-md);
+      border: 1.5px solid var(--border);
+      background: var(--surface);
+      padding: 10px 4px;
+      /* BUG: button height ~42px, just under 44px minimum */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2px;
+      cursor: pointer;
+      /* BUG: no transition on hover/active */
+      /* BUG: no :focus-visible outline */
+    }
+    .grade-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .grade-num {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+    .grade-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+    .grade-btn.again  { border-color: #fca5a5; }
+    .grade-btn.again  .grade-num { color: var(--red); }
+    .grade-btn.again  .grade-label { color: var(--red); }
+    .grade-btn.hard   { border-color: #fcd34d; }
+    .grade-btn.hard   .grade-num { color: var(--amber); }
+    .grade-btn.hard   .grade-label { color: var(--amber); }
+    .grade-btn.good   { border-color: var(--sage); }  /* BUG: good/easy share same sage color family — no visual differentiation */
+    .grade-btn.good   .grade-num { color: var(--sage); }
+    .grade-btn.good   .grade-label { color: var(--sage); }
+    .grade-btn.easy   { border-color: #86efac; }
+    .grade-btn.easy   .grade-num { color: var(--green); }
+    .grade-btn.easy   .grade-label { color: var(--green); }
+
+    /* ─── Show-answer button ─── */
+    .show-answer-btn {
+      width: 100%;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      padding: 14px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      /* BUG: no transition on hover/active */
+      /* BUG: no :focus-visible outline */
+      letter-spacing: 0; /* BUG: CTA button missing slight letter-spacing (0.01em) */
+    }
+
+    /* ─── Next-interval hints ─── */
+    .interval-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      /* BUG: gap same as grade-row (8px) — interval labels directly above buttons not distinguishable as a separate row */
+    }
+    .interval-hint {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-muted);
+      /* BUG: #999 on #f9f9f8 fails WCAG AA */
+    }
+
+    /* ─── Source snippet (full) ─── */
+    .source-panel {
+      background: var(--sage-light);
+      border: 1px solid #c8deca; /* BUG: one-off color, should be a design-token tinted border */
+      border-radius: var(--radius-md);
+      padding: 12px 16px;
+    }
+    .source-panel-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--sage);
+      margin-bottom: 6px;
+    }
+    .source-panel-text {
+      font-size: 13px;
+      color: var(--text-sub);
+      line-height: 1.55;
+    }
+
+    /* ─── Bottom spacer ─── */
+    .bottom-pad { height: 32px; }
+  </style>
+</head>
+<body>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>⋯</span>
+  </div>
+
+  <!-- Study header -->
+  <header class="study-header">
+    <button class="back-btn" aria-label="Back">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="15 18 9 12 15 6"/></svg>
+    </button>
+    <span class="study-title">Algorithms &amp; Data Structures</span>
+    <span class="study-progress-text">8 / 14</span>
+  </header>
+
+  <!-- Progress bar -->
+  <div class="progress-track">
+    <div class="progress-fill"></div>
+  </div>
+
+  <!-- Card area -->
+  <div class="card-area">
+
+    <!-- Flashcard (answer visible) -->
+    <div class="flashcard">
+      <span class="card-face-label">Definition → Term</span>
+
+      <p class="card-definition">
+        A data structure that provides O(1) average-case lookup, insertion, and deletion by mapping keys to indices via a hash function.
+      </p>
+
+      <div class="card-divider"></div>
+
+      <div class="card-term">Hash Table</div>
+
+      <div class="card-source">
+        "A hash table uses a hash function to compute an index into an array of buckets…"
+      </div>
+    </div>
+
+    <!-- Interval hints above grade buttons -->
+    <div class="interval-row">
+      <div class="interval-hint">1 min</div>
+      <div class="interval-hint">6 min</div>
+      <div class="interval-hint">1 day</div>
+      <div class="interval-hint">4 days</div>
+    </div>
+
+    <!-- Grade buttons -->
+    <div class="grade-row">
+      <button class="grade-btn again">
+        <span class="grade-num">1</span>
+        <span class="grade-label">Again</span>
+      </button>
+      <button class="grade-btn hard">
+        <span class="grade-num">2</span>
+        <span class="grade-label">Hard</span>
+      </button>
+      <button class="grade-btn good">
+        <span class="grade-num">3</span>
+        <span class="grade-label">Good</span>
+      </button>
+      <button class="grade-btn easy">
+        <span class="grade-num">4</span>
+        <span class="grade-label">Easy</span>
+      </button>
+    </div>
+
+    <!-- Source panel -->
+    <div class="source-panel">
+      <div class="source-panel-label">Source</div>
+      <p class="source-panel-text">
+        Chapter 4 — Hash Tables and Hashing. "A hash table uses a hash function to compute an index into an array of buckets or slots, from which the desired value can be found."
+      </p>
+    </div>
+
+  </div>
+
+  <div class="bottom-pad"></div>
+
+</body>
+</html>
