@@ -144,6 +144,7 @@ export type Database = {
           created_at: string
           id: string
           name: string
+          review_mode: Database["public"]["Enums"]["review_mode"]
           updated_at: string
           user_id: string
         }
@@ -151,6 +152,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
+          review_mode?: Database["public"]["Enums"]["review_mode"]
           updated_at?: string
           user_id: string
         }
@@ -158,10 +160,52 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
+          review_mode?: Database["public"]["Enums"]["review_mode"]
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      deck_metrics_snapshots: {
+        Row: {
+          cards_due: number
+          cards_total: number
+          collection_id: string | null
+          edit_rate_pct: number | null
+          id: string
+          retention_pct: number | null
+          sampled_at: string
+          user_id: string
+        }
+        Insert: {
+          cards_due?: number
+          cards_total?: number
+          collection_id?: string | null
+          edit_rate_pct?: number | null
+          id?: string
+          retention_pct?: number | null
+          sampled_at?: string
+          user_id: string
+        }
+        Update: {
+          cards_due?: number
+          cards_total?: number
+          collection_id?: string | null
+          edit_rate_pct?: number | null
+          id?: string
+          retention_pct?: number | null
+          sampled_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "deck_metrics_snapshots_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       generation_feedback: {
         Row: {
@@ -299,6 +343,7 @@ export type Database = {
       study_reviews: {
         Row: {
           card_id: string
+          collection_id: string | null
           grade: number
           id: string
           mode: Database["public"]["Enums"]["study_mode"]
@@ -307,6 +352,7 @@ export type Database = {
         }
         Insert: {
           card_id: string
+          collection_id?: string | null
           grade: number
           id?: string
           mode?: Database["public"]["Enums"]["study_mode"]
@@ -315,6 +361,7 @@ export type Database = {
         }
         Update: {
           card_id?: string
+          collection_id?: string | null
           grade?: number
           id?: string
           mode?: Database["public"]["Enums"]["study_mode"]
@@ -329,11 +376,53 @@ export type Database = {
             referencedRelation: "cards"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "study_reviews_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
         ]
       }
     }
     Views: {
-      [_ in never]: never
+      v_collection_edit_rate_30d: {
+        Row: {
+          collection_id: string | null
+          edit_rate_pct: number | null
+          feedback_negative: number | null
+          feedback_total: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cards_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      v_collection_retention_30d: {
+        Row: {
+          collection_id: string | null
+          retention_pct: number | null
+          reviews_passed: number | null
+          reviews_total: number | null
+          user_id: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "study_reviews_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Functions: {
       [_ in never]: never
@@ -343,6 +432,7 @@ export type Database = {
       fsrs_state: "new" | "learning" | "review" | "relearning"
       generation_status: "queued" | "running" | "succeeded" | "failed"
       prompt_direction: "definition_to_term" | "term_to_definition"
+      review_mode: "review_all" | "spot_check" | "trust"
       review_status: "pending" | "accepted" | "edited" | "rejected"
       source_kind: "paste" | "markdown" | "pdf" | "docx"
       study_mode: "scheduled" | "cram"
@@ -480,6 +570,7 @@ export const Constants = {
       fsrs_state: ["new", "learning", "review", "relearning"],
       generation_status: ["queued", "running", "succeeded", "failed"],
       prompt_direction: ["definition_to_term", "term_to_definition"],
+      review_mode: ["review_all", "spot_check", "trust"],
       review_status: ["pending", "accepted", "edited", "rejected"],
       source_kind: ["paste", "markdown", "pdf", "docx"],
       study_mode: ["scheduled", "cram"],
