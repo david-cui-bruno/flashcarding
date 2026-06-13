@@ -301,6 +301,7 @@ export type Database = {
           card_id: string
           grade: number
           id: string
+          interval_days: number | null
           mode: Database["public"]["Enums"]["study_mode"]
           reviewed_at: string
           user_id: string
@@ -309,6 +310,7 @@ export type Database = {
           card_id: string
           grade: number
           id?: string
+          interval_days?: number | null
           mode?: Database["public"]["Enums"]["study_mode"]
           reviewed_at?: string
           user_id: string
@@ -317,6 +319,7 @@ export type Database = {
           card_id?: string
           grade?: number
           id?: string
+          interval_days?: number | null
           mode?: Database["public"]["Enums"]["study_mode"]
           reviewed_at?: string
           user_id?: string
