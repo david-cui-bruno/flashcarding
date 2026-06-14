@@ -7,10 +7,14 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { GradePreview } from "@/lib/scheduling/fsrs";
+import { schedule, previewIntervals } from "@/lib/scheduling/fsrs";
 import { isLeech } from "@/lib/scheduling/leech";
 import { gradeCard, flagBadCard } from "../actions";
 
+// Full FSRS state travels to the client so the session can run the scheduler locally
+// (docs/SCHEDULING.md: FSRS is client-side) — for live interval previews and, crucially,
+// to re-queue a card that's still in a learning/relearning step so it reappears this
+// session (Anki-style learning steps).
 export type StudyCard = {
   id: string;
   term: string;
@@ -18,7 +22,14 @@ export type StudyCard = {
   prompt_direction: "definition_to_term" | "term_to_definition";
   lapses: number;
   fsrs_state: "new" | "learning" | "review" | "relearning";
-  intervals: GradePreview | null;
+  due: string;
+  stability: number;
+  difficulty: number;
+  elapsed_days: number;
+  scheduled_days: number;
+  reps: number;
+  last_review: string | null;
+  learning_steps: number;
 };
 
 type Mode = "scheduled" | "cram";
@@ -57,57 +68,100 @@ export function StudyDeckClient({
   cards: StudyCard[];
   mode: Mode;
 }) {
-  const queue = useMemo(() => (mode === "cram" ? shuffle(cards) : cards), [cards, mode]);
-
-  const [i, setI] = useState(0);
+  // The session queue. Cram = a fixed shuffled pass (no rescheduling). Scheduled =
+  // a live queue ordered by due; the head is the current card, and a graded card is
+  // either dropped (graduated to a multi-day review) or re-inserted in due order
+  // (still in a short learning/relearning step → seen again this session).
+  const [queue, setQueue] = useState<StudyCard[]>(() =>
+    mode === "cram" ? shuffle(cards) : [...cards].sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0)),
+  );
   const [shown, setShown] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [flagging, setFlagging] = useState(false);
   const [reason, setReason] = useState("");
 
-  const card = i < queue.length ? queue[i] : null;
+  const card = queue[0] ?? null;
   const leech = card ? isLeech(card) : false;
 
-  // Remaining new / learning / due across the rest of the queue (incl. current).
+  // New / learning / due across what's left in the session — behaves like Anki's
+  // bottom counts: New falls as you study new cards, Learning rises on Again, Due
+  // falls as review cards clear.
   const triplet = useMemo(() => {
     let nw = 0,
       learning = 0,
       due = 0;
-    for (const c of queue.slice(i)) {
+    for (const c of queue) {
       if (c.fsrs_state === "new") nw++;
       else if (c.fsrs_state === "learning" || c.fsrs_state === "relearning") learning++;
       else due++;
     }
     return { nw, learning, due };
-  }, [queue, i]);
+  }, [queue]);
 
-  const advance = useCallback(() => {
+  // Live interval previews for the current card (cram never reschedules → no previews).
+  const intervals = useMemo(
+    () => (card && mode === "scheduled" ? previewIntervals(card) : null),
+    [card, mode],
+  );
+
+  const resetCardUi = useCallback(() => {
     setShown(false);
     setFlagging(false);
     setReason("");
-    setI((n) => n + 1);
   }, []);
 
-  // Optimistic: advance the instant a grade is pressed and persist in the background.
-  // The write is a DB round trip we don't want to wait on (Anki-style). A failure is
-  // rare and non-fatal (that one card just won't be rescheduled), so we only toast.
+  // Optimistic + client-scheduled: compute the next state locally (instant, no round
+  // trip), update the queue, and persist in the background. A failed write is rare and
+  // non-fatal (that card just isn't rescheduled), so we only toast.
   const grade = useCallback(
     (g: 1 | 2 | 3 | 4) => {
-      if (!card) return;
-      void gradeCard(card.id, g, mode).catch(() =>
-        toast.error("Couldn't save that review — it may not be rescheduled."),
-      );
+      const cur = queue[0];
+      if (!cur) return;
+
+      if (mode === "cram") {
+        void gradeCard(cur.id, g, "cram").catch(() => toast.error("Couldn't save that review."));
+        setQueue((q) => q.slice(1));
+      } else {
+        const u = schedule(cur, g);
+        void gradeCard(cur.id, g, "scheduled", u).catch(() =>
+          toast.error("Couldn't save that review — it may not be rescheduled."),
+        );
+        const updated: StudyCard = {
+          ...cur,
+          due: u.due,
+          stability: u.stability,
+          difficulty: u.difficulty,
+          elapsed_days: u.elapsed_days,
+          scheduled_days: u.scheduled_days,
+          reps: u.reps,
+          lapses: u.lapses,
+          fsrs_state: u.fsrs_state,
+          last_review: u.last_review,
+          learning_steps: u.learning_steps,
+        };
+        setQueue((q) => {
+          const tail = q.slice(1);
+          if (updated.fsrs_state === "review") return tail; // graduated → done this session
+          const idx = tail.findIndex((c) => c.due > updated.due);
+          if (idx === -1) tail.push(updated);
+          else tail.splice(idx, 0, updated);
+          return tail;
+        });
+      }
+
       setReviewed((n) => n + 1);
-      advance();
+      resetCardUi();
     },
-    [card, mode, advance],
+    [queue, mode, resetCardUi],
   );
 
   const flagBad = useCallback(() => {
-    if (!card) return;
-    void flagBadCard(card.id, reason).catch(() => toast.error("Couldn't remove that card."));
-    advance();
-  }, [card, reason, advance]);
+    const cur = queue[0];
+    if (!cur) return;
+    void flagBadCard(cur.id, reason).catch(() => toast.error("Couldn't remove that card."));
+    setQueue((q) => q.slice(1));
+    resetCardUi();
+  }, [queue, reason, resetCardUi]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -117,7 +171,7 @@ export function StudyDeckClient({
         setShown((s) => !s);
       } else if (shown && ["1", "2", "3", "4"].includes(e.key)) {
         e.preventDefault();
-        void grade(Number(e.key) as 1 | 2 | 3 | 4);
+        grade(Number(e.key) as 1 | 2 | 3 | 4);
       }
     };
     window.addEventListener("keydown", onKey);
@@ -187,13 +241,13 @@ export function StudyDeckClient({
                 key={g}
                 onClick={() => grade(g as 1 | 2 | 3 | 4)}
                 className={cn(
-                  "flex min-w-[78px] flex-col items-center gap-0.5 rounded-md border border-border bg-card px-3 pb-1.5 pt-2 transition-colors disabled:opacity-50 md:min-w-[86px]",
+                  "flex min-w-[78px] flex-col items-center gap-0.5 rounded-md border border-border bg-card px-3 pb-1.5 pt-2 transition-colors md:min-w-[86px]",
                   cls,
                 )}
               >
-                {card.intervals && (
+                {intervals && (
                   <span className={cn("text-[0.68rem] font-semibold tabular-nums", int)}>
-                    {card.intervals[key]}
+                    {intervals[key]}
                   </span>
                 )}
                 <span className="text-[0.82rem] font-semibold leading-none">{label}</span>
