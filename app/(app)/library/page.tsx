@@ -35,7 +35,7 @@ export default async function LibraryPage() {
     let state: DeckSummary["state"] = "none";
     if (a.dueNow > 0) state = a.studied ? "due" : "new";
     else if (a.studyable > 0) state = "caught-up";
-    return { id: c.id, name: c.name, total: a.total, dueNow: a.dueNow, state };
+    return { id: c.id, name: c.name, total: a.total, studyable: a.studyable, dueNow: a.dueNow, state };
   });
 
   return <DecksHome decks={decks} triageCount={triageCount} />;

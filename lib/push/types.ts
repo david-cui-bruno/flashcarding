@@ -22,7 +22,7 @@ export type ReminderPrefs = {
 };
 
 // Only the username lives in Auth user_metadata now (set at signup, used by the layout).
-export type CardstockUserMetadata = {
+export type DoryUserMetadata = {
   username?: string;
 };
 

@@ -1,0 +1,35 @@
+{
+  "name": "dory-desktop",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Dory desktop app (Electron wrapper around the deployed web app)",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder --mac dir"
+  },
+  "build": {
+    "appId": "com.framewise.dory",
+    "productName": "Dory",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "icon.png"
+    ],
+    "mac": {
+      "category": "public.app-category.education",
+      "target": [
+        "dir"
+      ],
+      "icon": "icon.png",
+      "identity": null
+    }
+  },
+  "devDependencies": {
+    "electron": "^42.4.0",
+    "electron-builder": "^26.15.3"
+  }
+}

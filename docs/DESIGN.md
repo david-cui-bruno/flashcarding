@@ -10,10 +10,13 @@ See also: `docs/VISION.md` (what Cardstock is), `docs/CARD-QUALITY.md` (the keys
 what a good card is), and `.context/mockups/POLISH.md` (the researched polish checklist).
 
 ## Design language
-- **Accent: sage** (`--primary`), on a **warm-neutral** base, **Inter** typeface,
-  **shadcn/ui** components. Exact tokens: `app/globals.css` (`:root`). Restrained — the
-  accent appears only on the primary CTA, active nav, focus ring, and selection; never
-  decorative.
+- **Accent: cerulean** (`--primary` `#0e7ec2`, the blue-tang/"Dory" blue), on a **cool
+  slate** neutral base (the greys share the accent's temperature so it reads as one
+  family), **system-ui** typeface (native SF/Segoe/Roboto), **shadcn/ui** components.
+  Exact tokens: `app/globals.css` (`:root`). Restrained — the accent appears only on the
+  primary CTA, active nav, focus ring, and selection; never decorative.
+- **Count triplet** colors are accent-independent: **new = violet** (`#7c3aed`, kept off
+  the cerulean so it doesn't collide), **learning = red**, **due = green**.
 - **One radius token**, subtle depth (border _or_ shadow, not both), **tabular numerals**
   on every count. Full rules: `.context/mockups/POLISH.md`.
 - Light-mode only (no theme toggle); `.dark` tokens exist but are dormant.

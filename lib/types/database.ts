@@ -54,6 +54,7 @@ export type Database = {
           id: string
           lapses: number
           last_review: string | null
+          learning_steps: number
           prompt_direction: Database["public"]["Enums"]["prompt_direction"]
           reps: number
           review_status: Database["public"]["Enums"]["review_status"]
@@ -79,6 +80,7 @@ export type Database = {
           id?: string
           lapses?: number
           last_review?: string | null
+          learning_steps?: number
           prompt_direction?: Database["public"]["Enums"]["prompt_direction"]
           reps?: number
           review_status?: Database["public"]["Enums"]["review_status"]
@@ -104,6 +106,7 @@ export type Database = {
           id?: string
           lapses?: number
           last_review?: string | null
+          learning_steps?: number
           prompt_direction?: Database["public"]["Enums"]["prompt_direction"]
           reps?: number
           review_status?: Database["public"]["Enums"]["review_status"]

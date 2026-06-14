@@ -29,7 +29,7 @@ export async function saveReminderPrefsAction(input: {
 export async function sendTestNotificationAction() {
   try {
     const result = await sendToCurrentUser({
-      title: "Cardstock",
+      title: "Dory",
       body: "This is a test reminder. Notifications are working 🎉",
       url: "/study",
       tag: "carding-test",

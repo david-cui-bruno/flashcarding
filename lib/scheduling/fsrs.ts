@@ -7,8 +7,20 @@ import {
 } from "ts-fsrs";
 import type { Card } from "@/lib/types/domain";
 
-// FSRS at the 90% target retention from docs/SCHEDULING.md.
-const scheduler = fsrs(generatorParameters({ request_retention: 0.9 }));
+// FSRS at the 90% target retention from docs/SCHEDULING.md ("copies modern Anki").
+// Short-term (re)learning steps ON, with Anki's default ladder (1m, 10m / 10m): an
+// Again/Good on a new-or-lapsed card cycles it through these short steps before it
+// graduates to a multi-day review interval. The study session re-queues a card while
+// it's in a learning/relearning step so it reappears the same session (see
+// study-deck-client.tsx). No daily new/review caps — SCHEDULING.md keeps new cards uncapped.
+const scheduler = fsrs(
+  generatorParameters({
+    request_retention: 0.9,
+    enable_short_term: true,
+    learning_steps: ["1m", "10m"],
+    relearning_steps: ["10m"],
+  }),
+);
 
 const STATE_TO_NUM: Record<string, State> = {
   new: State.New,
@@ -31,6 +43,7 @@ export type SchedulableCard = Pick<
   | "lapses"
   | "fsrs_state"
   | "last_review"
+  | "learning_steps"
 >;
 
 function toFsrsCard(c: SchedulableCard): FsrsCard {
@@ -44,7 +57,8 @@ function toFsrsCard(c: SchedulableCard): FsrsCard {
     lapses: c.lapses,
     state: STATE_TO_NUM[c.fsrs_state] ?? State.New,
     last_review: c.last_review ? new Date(c.last_review) : undefined,
-    learning_steps: 0,
+    // Which short-term step the card is on — persisted so it graduates correctly.
+    learning_steps: c.learning_steps ?? 0,
   };
 }
 
@@ -59,6 +73,7 @@ export type FsrsUpdate = {
   lapses: number;
   fsrs_state: (typeof NUM_TO_STATE)[number];
   last_review: string;
+  learning_steps: number;
 };
 
 // grade: 1 Again, 2 Hard, 3 Good, 4 Easy — maps directly to FSRS Rating values.
@@ -74,6 +89,7 @@ export function schedule(card: SchedulableCard, grade: 1 | 2 | 3 | 4, now: Date 
     lapses: u.lapses,
     fsrs_state: NUM_TO_STATE[u.state],
     last_review: (u.last_review ?? now).toISOString(),
+    learning_steps: u.learning_steps,
   };
 }
 

@@ -4,46 +4,47 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Carding design tokens — the "sage" theme from .context/mockups/theme.css,
-  mapped onto shadcn/ui's CSS-variable names. Warm-neutral base, sage accent,
-  one radius token. Light-mode only (the design is light); .dark is defined for
-  shadcn's dark: variants to compile but is never activated (no theme toggle).
-  All hex values are AA-checked per .context/mockups/POLISH.md.
+  Dory design tokens — cerulean accent (the blue tang's blue) on a cool slate
+  neutral base, mapped onto shadcn/ui's CSS-variable names. The cool greys share the
+  accent's temperature so the palette reads as one family. System font (set below).
+  One radius token.
+  Light-mode only; .dark is defined so shadcn's dark: variants compile but is never
+  activated (no theme toggle). Contrast AA per .context/mockups/POLISH.md.
 */
 :root {
   --radius: 0.75rem;
 
-  /* warm-neutral base */
-  --background: #faf9f7;
-  --foreground: #1c1917;
+  /* cool slate neutral base */
+  --background: #f8fafc;
+  --foreground: #0f172a;
   --card: #ffffff;
-  --card-foreground: #1c1917;
+  --card-foreground: #0f172a;
   --popover: #ffffff;
-  --popover-foreground: #1c1917;
+  --popover-foreground: #0f172a;
 
-  /* sage accent */
-  --primary: #5e7d6e;
+  /* cerulean accent (the blue tang's blue) */
+  --primary: #0e7ec2;
   --primary-foreground: #ffffff;
 
-  --secondary: #f4f3f1;
-  --secondary-foreground: #1c1917;
-  --muted: #f4f3f1;
-  --muted-foreground: #78716c;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
 
-  /* accent = accent-tinted "soft" surface */
-  --accent: #eef2ef;
-  --accent-foreground: #3f5a4c;
+  /* accent = cerulean-tinted "soft" surface */
+  --accent: #e3f1fb;
+  --accent-foreground: #0b5e8a;
 
   --destructive: #e11d48;
   --destructive-foreground: #ffffff;
 
-  --border: #e7e5e4;
-  --input: #e2e0dd;
-  --ring: #5e7d6e;
+  --border: #e2e8f0;
+  --input: #d9e0e8;
+  --ring: #0e7ec2;
 
   /* semantic (accent-independent) — Anki count triplet + states */
-  --new: #2563eb;        /* new cards */
-  --new-soft: #dbeafe;
+  --new: #7c3aed;        /* new cards (violet — distinct from the cerulean accent) */
+  --new-soft: #ede9fe;
   --learning: #e11d48;   /* learning cards */
   --learning-soft: #ffe4e6;
   --due: #16a34a;        /* due cards */
@@ -56,47 +57,48 @@
 
   /* sidebar (custom nav shell) */
   --sidebar: #ffffff;
-  --sidebar-foreground: #1c1917;
-  --sidebar-primary: #5e7d6e;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #0e7ec2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #eef2ef;
-  --sidebar-accent-foreground: #3f5a4c;
-  --sidebar-border: #e7e5e4;
-  --sidebar-ring: #5e7d6e;
+  --sidebar-accent: #e3f1fb;
+  --sidebar-accent-foreground: #0b5e8a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #0e7ec2;
 }
 
 .dark {
-  --background: #1c1917;
-  --foreground: #faf9f7;
-  --card: #292524;
-  --card-foreground: #faf9f7;
-  --popover: #292524;
-  --popover-foreground: #faf9f7;
-  --primary: #7e9d8e;
-  --primary-foreground: #1c1917;
-  --secondary: #292524;
-  --secondary-foreground: #faf9f7;
-  --muted: #292524;
-  --muted-foreground: #a8a29e;
-  --accent: #2a322d;
-  --accent-foreground: #c9d6cf;
+  --background: #0b1220;
+  --foreground: #e2e8f0;
+  --card: #131c2e;
+  --card-foreground: #e2e8f0;
+  --popover: #131c2e;
+  --popover-foreground: #e2e8f0;
+  --primary: #2dd4bf;
+  --primary-foreground: #04201d;
+  --secondary: #1e293b;
+  --secondary-foreground: #e2e8f0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+  --accent: #123b37;
+  --accent-foreground: #99f6e4;
   --destructive: #f43f5e;
-  --destructive-foreground: #1c1917;
-  --border: #353130;
-  --input: #353130;
-  --ring: #7e9d8e;
-  --sidebar: #1c1917;
-  --sidebar-foreground: #faf9f7;
-  --sidebar-primary: #7e9d8e;
-  --sidebar-primary-foreground: #1c1917;
-  --sidebar-accent: #2a322d;
-  --sidebar-accent-foreground: #c9d6cf;
-  --sidebar-border: #353130;
-  --sidebar-ring: #7e9d8e;
+  --destructive-foreground: #0b1220;
+  --border: #25324a;
+  --input: #25324a;
+  --ring: #2dd4bf;
+  --sidebar: #0b1220;
+  --sidebar-foreground: #e2e8f0;
+  --sidebar-primary: #2dd4bf;
+  --sidebar-primary-foreground: #04201d;
+  --sidebar-accent: #123b37;
+  --sidebar-accent-foreground: #99f6e4;
+  --sidebar-border: #25324a;
+  --sidebar-ring: #2dd4bf;
 }
 
 @theme inline {
-  --font-sans: var(--font-sans), ui-sans-serif, system-ui, -apple-system, sans-serif;
+  /* System UI font — native on every OS (SF / Segoe / Roboto), zero load cost. */
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, ui-sans-serif, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);

@@ -1,25 +1,17 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "./_pwa/service-worker-registrar";
 
-// Inter is the design's typeface (see .context/mockups/theme.css). Loaded as a
-// CSS variable so globals.css can reference it via --font-sans.
-const inter = Inter({
-  variable: "--font-sans",
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-});
-
-// Next auto-injects <link rel="manifest"> from app/manifest.ts; appleWebApp +
+// Typeface is the system UI font (set in globals.css via --font-sans) — native on
+// every OS, no webfont to load. Next auto-injects <link rel="manifest"> from app/manifest.ts; appleWebApp +
 // icons.apple add the iOS home-screen / installable-PWA meta tags.
 export const metadata: Metadata = {
-  title: { default: "Cardstock", template: "%s · Cardstock" },
+  title: { default: "Dory", template: "%s · Dory" },
   description: "Turn documents into high-quality flashcards and study them on a spaced schedule.",
-  applicationName: "Cardstock",
+  applicationName: "Dory",
   appleWebApp: {
     capable: true,
-    title: "Cardstock",
+    title: "Dory",
     statusBarStyle: "default",
   },
   icons: {
@@ -32,7 +24,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#111111",
+  themeColor: "#0f172a",
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
@@ -44,7 +36,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${inter.variable} h-full antialiased`}>
+    <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegistrar />

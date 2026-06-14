@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { previewIntervals } from "@/lib/scheduling/fsrs";
 import { StudyGate } from "./study-gate";
 import { StudyDeckClient, type StudyCard } from "./study-deck-client";
 
-// Full FSRS state is needed to preview grade intervals; display fields too.
+// Full FSRS state — the session runs the scheduler client-side to preview grade
+// intervals and re-queue learning-step cards (Anki-style). Display fields too.
 const STUDY_COLUMNS =
-  "id, term, definition, prompt_direction, lapses, fsrs_state, due, stability, difficulty, elapsed_days, scheduled_days, reps, last_review";
+  "id, term, definition, prompt_direction, lapses, fsrs_state, due, stability, difficulty, elapsed_days, scheduled_days, reps, last_review, learning_steps";
 
 export default async function DeckStudyPage({
   params,
@@ -72,7 +72,6 @@ export default async function DeckStudyPage({
       ? await base.lte("due", new Date().toISOString()).order("due", { ascending: true })
       : await base.order("created_at", { ascending: true });
 
-  const now = new Date();
   const studyCards: StudyCard[] = (cards ?? []).map((c) => ({
     id: c.id,
     term: c.term,
@@ -80,8 +79,14 @@ export default async function DeckStudyPage({
     prompt_direction: c.prompt_direction,
     lapses: c.lapses,
     fsrs_state: c.fsrs_state,
-    // Cram never reschedules, so previews would mislead — only compute for scheduled.
-    intervals: mode === "scheduled" ? previewIntervals(c) : null,
+    due: c.due,
+    stability: c.stability,
+    difficulty: c.difficulty,
+    elapsed_days: c.elapsed_days,
+    scheduled_days: c.scheduled_days,
+    reps: c.reps,
+    last_review: c.last_review,
+    learning_steps: c.learning_steps,
   }));
 
   return <StudyDeckClient deckId={deck.id} name={deck.name} cards={studyCards} mode={mode} />;

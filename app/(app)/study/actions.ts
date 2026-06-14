@@ -1,14 +1,21 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
-import { schedule } from "@/lib/scheduling/fsrs";
+import { schedule, type FsrsUpdate } from "@/lib/scheduling/fsrs";
 
 type StudyMode = "scheduled" | "cram";
 
+// The study session runs FSRS client-side (docs/SCHEDULING.md says scheduling is
+// client-side) so it can re-queue learning-step cards within the session. It passes
+// the resulting `update` here, which we persist as-is — this keeps the DB consistent
+// with exactly what the learner saw and avoids a recompute race when a card is graded
+// several times in one session (learning steps). If `update` is omitted we recompute
+// server-side from the stored card as a fallback.
 export async function gradeCard(
   cardId: string,
   grade: 1 | 2 | 3 | 4,
   mode: StudyMode = "scheduled",
+  update?: FsrsUpdate,
 ): Promise<void> {
   const supabase = await createClient();
   const {
@@ -26,11 +33,13 @@ export async function gradeCard(
     return;
   }
 
-  const { data: card } = await supabase.from("cards").select("*").eq("id", cardId).single();
-  if (!card) return;
-
-  const update = schedule(card, grade);
-  await supabase.from("cards").update(update).eq("id", cardId);
+  let fsrs = update;
+  if (!fsrs) {
+    const { data: card } = await supabase.from("cards").select("*").eq("id", cardId).single();
+    if (!card) return;
+    fsrs = schedule(card, grade);
+  }
+  await supabase.from("cards").update(fsrs).eq("id", cardId);
   await supabase
     .from("study_reviews")
     .insert({ user_id: user.id, card_id: cardId, grade, mode: "scheduled" });
