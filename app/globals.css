@@ -4,9 +4,10 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
-  Dory design tokens — deep-teal accent on a cool slate neutral base, mapped onto
-  shadcn/ui's CSS-variable names. The cool greys share the accent's temperature so
-  the palette reads as one family. System font (set below). One radius token.
+  Dory design tokens — cerulean accent (the blue tang's blue) on a cool slate
+  neutral base, mapped onto shadcn/ui's CSS-variable names. The cool greys share the
+  accent's temperature so the palette reads as one family. System font (set below).
+  One radius token.
   Light-mode only; .dark is defined so shadcn's dark: variants compile but is never
   activated (no theme toggle). Contrast AA per .context/mockups/POLISH.md.
 */
@@ -21,8 +22,8 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  /* deep teal accent */
-  --primary: #0b5d57;
+  /* cerulean accent (the blue tang's blue) */
+  --primary: #0e7ec2;
   --primary-foreground: #ffffff;
 
   --secondary: #f1f5f9;
@@ -30,20 +31,20 @@
   --muted: #f1f5f9;
   --muted-foreground: #64748b;
 
-  /* accent = teal-tinted "soft" surface */
-  --accent: #dfeeec;
-  --accent-foreground: #08443f;
+  /* accent = cerulean-tinted "soft" surface */
+  --accent: #e3f1fb;
+  --accent-foreground: #0b5e8a;
 
   --destructive: #e11d48;
   --destructive-foreground: #ffffff;
 
   --border: #e2e8f0;
   --input: #d9e0e8;
-  --ring: #0b5d57;
+  --ring: #0e7ec2;
 
   /* semantic (accent-independent) — Anki count triplet + states */
-  --new: #2563eb;        /* new cards */
-  --new-soft: #dbeafe;
+  --new: #7c3aed;        /* new cards (violet — distinct from the cerulean accent) */
+  --new-soft: #ede9fe;
   --learning: #e11d48;   /* learning cards */
   --learning-soft: #ffe4e6;
   --due: #16a34a;        /* due cards */
@@ -57,12 +58,12 @@
   /* sidebar (custom nav shell) */
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-primary: #0b5d57;
+  --sidebar-primary: #0e7ec2;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #dfeeec;
-  --sidebar-accent-foreground: #08443f;
+  --sidebar-accent: #e3f1fb;
+  --sidebar-accent-foreground: #0b5e8a;
   --sidebar-border: #e2e8f0;
-  --sidebar-ring: #0b5d57;
+  --sidebar-ring: #0e7ec2;
 }
 
 .dark {
