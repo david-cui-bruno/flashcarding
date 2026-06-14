@@ -1,0 +1,6 @@
+# Not part of the deployed web app — these are local-only / huge and must not be
+# uploaded (vercel CLI uploads the working dir, not just git-tracked files).
+desktop/
+assets/
+.context/
+services/
