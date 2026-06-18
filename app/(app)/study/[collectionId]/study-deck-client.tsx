@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Flag } from "lucide-react";
+import { Flag, Volume2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 import { schedule, previewIntervals } from "@/lib/scheduling/fsrs";
 import { isLeech } from "@/lib/scheduling/leech";
 import { gradeCard, flagBadCard } from "../actions";
@@ -30,6 +31,7 @@ export type StudyCard = {
   reps: number;
   last_review: string | null;
   learning_steps: number;
+  audio_path: string | null;
 };
 
 type Mode = "scheduled" | "cram";
@@ -55,6 +57,45 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// A card face. A second line (e.g. pinyin under the hanzi, joined with "\n" at import)
+// renders smaller + muted so the primary line stays the focus.
+function Face({ text, emphasis }: { text: string; emphasis?: boolean }) {
+  const [primary, ...rest] = text.split("\n");
+  return (
+    <>
+      <p className={cn("text-2xl leading-relaxed", emphasis && "font-semibold leading-snug")}>{primary}</p>
+      {rest.length > 0 && <p className="mt-1.5 text-lg text-muted-foreground">{rest.join(" ")}</p>}
+    </>
+  );
+}
+
+// Press-to-play (replayable) card audio, streamed from the private card-audio bucket via a
+// short-lived signed URL fetched on first play. No autoplay (docs: the user presses play).
+function AudioButton({ path }: { path: string }) {
+  const urlRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const play = useCallback(async () => {
+    if (!urlRef.current) {
+      const supabase = createClient();
+      const { data, error } = await supabase.storage.from("card-audio").createSignedUrl(path, 3600);
+      if (error || !data?.signedUrl) {
+        toast.error("Couldn't load audio.");
+        return;
+      }
+      urlRef.current = data.signedUrl;
+    }
+    if (!audioRef.current) audioRef.current = new Audio(urlRef.current);
+    audioRef.current.currentTime = 0;
+    void audioRef.current.play().catch(() => toast.error("Couldn't play audio."));
+  }, [path]);
+  return (
+    <Button variant="outline" size="sm" className="mt-5" onClick={play}>
+      <Volume2 className="size-4" />
+      Play
+    </Button>
+  );
 }
 
 export function StudyDeckClient({
@@ -217,11 +258,12 @@ export function StudyDeckClient({
               .
             </div>
           )}
-          <p className="text-2xl leading-relaxed">{prompt}</p>
+          <Face text={prompt} />
           {shown && (
             <>
               <hr className="mx-auto my-6 w-24 border-border" />
-              <p className="text-2xl font-semibold leading-snug">{answer}</p>
+              <Face text={answer} emphasis />
+              {card.audio_path && <AudioButton key={card.id} path={card.audio_path} />}
             </>
           )}
         </div>
