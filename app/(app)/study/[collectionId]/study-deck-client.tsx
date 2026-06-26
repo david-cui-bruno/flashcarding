@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Flag, Volume2 } from "lucide-react";
+import { Flag, Volume2, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -43,11 +43,14 @@ const GRADES = [
   { g: 4, label: "Easy", key: "easy", cls: "hover:bg-[#f3f8ff] hover:border-[#bfdbfe]", int: "text-new" },
 ] as const;
 
-// Default direction is fact → term (docs/CARD-QUALITY.md).
-function faces(card: StudyCard): { prompt: string; answer: string } {
-  return card.prompt_direction === "term_to_definition"
-    ? { prompt: card.term, answer: card.definition }
-    : { prompt: card.definition, answer: card.term };
+// Default direction is fact → term (docs/CARD-QUALITY.md). `flipped` swaps the whole
+// session's front/back (e.g. study English → recall the Chinese).
+function faces(card: StudyCard, flipped: boolean): { prompt: string; answer: string } {
+  const base =
+    card.prompt_direction === "term_to_definition"
+      ? { prompt: card.term, answer: card.definition }
+      : { prompt: card.definition, answer: card.term };
+  return flipped ? { prompt: base.answer, answer: base.prompt } : base;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -120,6 +123,25 @@ export function StudyDeckClient({
   const [reviewed, setReviewed] = useState(0);
   const [flagging, setFlagging] = useState(false);
   const [reason, setReason] = useState("");
+
+  // Flip the whole session's front/back, persisted per deck. Audio stays on the revealed
+  // side (it's the Chinese pronunciation — useful whichever way you study).
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`dory-flip-${deckId}`) === "1") setFlipped(true);
+    } catch {}
+  }, [deckId]);
+  const toggleFlip = useCallback(() => {
+    setFlipped((f) => {
+      const next = !f;
+      try {
+        localStorage.setItem(`dory-flip-${deckId}`, next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+    setShown(false);
+  }, [deckId]);
 
   const card = queue[0] ?? null;
   const leech = card ? isLeech(card) : false;
@@ -241,10 +263,23 @@ export function StudyDeckClient({
     );
   }
 
-  const { prompt, answer } = faces(card);
+  const { prompt, answer } = faces(card, flipped);
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* flip front/back for the whole session (persisted per deck) */}
+      <button
+        onClick={toggleFlip}
+        aria-pressed={flipped}
+        title="Flip front / back"
+        className={cn(
+          "fixed bottom-5 right-5 z-10 flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[0.78rem] font-medium shadow-sm transition-colors hover:bg-muted",
+          flipped && "border-primary/50 text-primary",
+        )}
+      >
+        <ArrowLeftRight className="size-4" />
+        Flip
+      </button>
       {/* content anchored toward the top, plain text, no card */}
       <div className="flex flex-1 flex-col items-center px-6 pt-16 text-center">
         <div className="w-full max-w-[620px]">
