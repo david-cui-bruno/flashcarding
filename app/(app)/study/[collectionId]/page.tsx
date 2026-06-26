@@ -29,25 +29,25 @@ export default async function DeckStudyPage({
 
   // No mode chosen → the gate (Study due / Cram all).
   if (modeParam !== "due" && modeParam !== "cram") {
+    // Exact COUNT queries (not row fetches) so big decks aren't capped by the PostgREST
+    // max-rows limit (1000) — a deck can have many thousands of cards.
     const nowIso = new Date().toISOString();
-    const { data: cards } = await supabase
-      .from("cards")
-      .select("fsrs_state, due")
-      .eq("collection_id", collectionId)
-      .in("review_status", ["accepted", "edited"]);
-
-    let nw = 0,
-      learning = 0,
-      due = 0,
-      cram = 0;
-    for (const c of cards ?? []) {
-      cram++;
-      if (c.due && c.due <= nowIso) {
-        if (c.fsrs_state === "new") nw++;
-        else if (c.fsrs_state === "learning" || c.fsrs_state === "relearning") learning++;
-        else due++;
-      }
-    }
+    const countBase = () =>
+      supabase
+        .from("cards")
+        .select("*", { count: "exact", head: true })
+        .eq("collection_id", collectionId)
+        .in("review_status", ["accepted", "edited"]);
+    const [cramRes, newRes, learnRes, dueRes] = await Promise.all([
+      countBase(),
+      countBase().eq("fsrs_state", "new").lte("due", nowIso),
+      countBase().in("fsrs_state", ["learning", "relearning"]).lte("due", nowIso),
+      countBase().eq("fsrs_state", "review").lte("due", nowIso),
+    ]);
+    const nw = newRes.count ?? 0;
+    const learning = learnRes.count ?? 0;
+    const due = dueRes.count ?? 0;
+    const cram = cramRes.count ?? 0;
 
     return (
       <StudyGate
@@ -61,16 +61,29 @@ export default async function DeckStudyPage({
   }
 
   const mode: "scheduled" | "cram" = modeParam === "cram" ? "cram" : "scheduled";
-  const base = supabase
-    .from("cards")
-    .select(STUDY_COLUMNS)
-    .eq("collection_id", collectionId)
-    .in("review_status", ["accepted", "edited"]);
 
-  const { data: cards } =
-    mode === "scheduled"
-      ? await base.lte("due", new Date().toISOString()).order("due", { ascending: true })
-      : await base.order("created_at", { ascending: true });
+  // Page past the PostgREST max-rows cap (1000) so the WHOLE deck loads — no daily limit
+  // (docs/SCHEDULING.md: new cards are uncapped). Small decks return in a single page.
+  const nowIso = new Date().toISOString();
+  const PAGE = 1000;
+  async function fetchPage(from: number) {
+    const base = supabase
+      .from("cards")
+      .select(STUDY_COLUMNS)
+      .eq("collection_id", collectionId)
+      .in("review_status", ["accepted", "edited"]);
+    const q =
+      mode === "scheduled"
+        ? base.lte("due", nowIso).order("due", { ascending: true })
+        : base.order("created_at", { ascending: true });
+    return (await q.range(from, from + PAGE - 1)).data ?? [];
+  }
+  const cards: Awaited<ReturnType<typeof fetchPage>> = [];
+  for (let from = 0; ; from += PAGE) {
+    const page = await fetchPage(from);
+    cards.push(...page);
+    if (page.length < PAGE) break;
+  }
 
   const studyCards: StudyCard[] = (cards ?? []).map((c) => ({
     id: c.id,
