@@ -179,15 +179,27 @@ export function StudyDeckClient({
       });
     return () => {
       cancelled = true;
+      audioElRef.current?.pause(); // stop playback when leaving the card / unmounting
     };
   }, [card?.id, card?.audio_path]);
 
-  const playAudio = useCallback(() => {
+  const playAudio = useCallback(async () => {
+    const path = card?.audio_path;
+    if (!path) return;
+    // Usually preloaded; if Play is pressed before the preload resolved, load on demand.
+    if (!audioElRef.current) {
+      const supabase = createClient();
+      const { data } = await supabase.storage.from("card-audio").createSignedUrl(path, 3600);
+      if (!audioElRef.current && data?.signedUrl) audioElRef.current = new Audio(data.signedUrl);
+    }
     const a = audioElRef.current;
-    if (!a) return;
+    if (!a) {
+      toast.error("Couldn't load audio.");
+      return;
+    }
     a.currentTime = 0;
     void a.play().catch(() => toast.error("Couldn't play audio."));
-  }, []);
+  }, [card?.id, card?.audio_path]);
 
   const resetCardUi = useCallback(() => {
     setShown(false);

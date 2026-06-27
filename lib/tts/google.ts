@@ -22,30 +22,35 @@ export async function synthesizeMp3(text: string, opts: TtsOptions = {}): Promis
     audioConfig: { audioEncoding: "MP3" },
   });
 
+  const backoff = (attempt: number) => new Promise((r) => setTimeout(r, 500 + attempt * 1000));
   let lastErr: unknown;
   for (let attempt = 0; attempt < 3; attempt++) {
+    let res: Response;
     try {
-      const res = await fetch(`${ENDPOINT}?key=${apiKey}`, {
+      res = await fetch(`${ENDPOINT}?key=${apiKey}`, {
         method: "POST",
         headers: { "Content-Type": "application/json; charset=utf-8" },
         body,
       });
-      if (res.status === 429 || res.status >= 500) {
-        // rate-limited / transient — back off and retry
-        throw new Error(`Google TTS ${res.status}`);
-      }
-      if (!res.ok) {
-        const detail = await res.text();
-        throw new Error(`Google TTS ${res.status}: ${detail.slice(0, 300)}`);
-      }
+    } catch (err) {
+      // network/transport error — retryable; don't sleep after the final attempt
+      lastErr = err;
+      if (attempt < 2) await backoff(attempt);
+      continue;
+    }
+    if (res.ok) {
       const json = (await res.json()) as { audioContent?: string };
       if (!json.audioContent) throw new Error("Google TTS: empty audioContent");
       return Buffer.from(json.audioContent, "base64");
-    } catch (err) {
-      lastErr = err;
-      // backoff: 0.5s, 1.5s
-      await new Promise((r) => setTimeout(r, 500 + attempt * 1000));
     }
+    // Retry only rate-limit / server errors; fail fast on 4xx (bad key, bad request).
+    if (res.status === 429 || res.status >= 500) {
+      lastErr = new Error(`Google TTS ${res.status}`);
+      if (attempt < 2) await backoff(attempt);
+      continue;
+    }
+    const detail = await res.text();
+    throw new Error(`Google TTS ${res.status}: ${detail.slice(0, 300)}`);
   }
   throw lastErr instanceof Error ? lastErr : new Error("Google TTS failed");
 }

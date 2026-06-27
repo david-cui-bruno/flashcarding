@@ -42,10 +42,16 @@ async function main() {
   if (error) throw error;
   console.log(`${cards?.length ?? 0} cards missing audio`);
 
+  const CJK = /[一-鿿]/;
   let fixed = 0,
-    failed = 0;
+    failed = 0,
+    skipped = 0;
   for (const c of cards ?? []) {
     const hanzi = c.term.split("\n")[0];
+    if (!CJK.test(hanzi)) {
+      skipped++;
+      continue; // not a Chinese card — don't synthesize Mandarin audio for it
+    }
     try {
       const bytes = await synthesizeMp3(hanzi);
       const objectPath = `${uid}/${c.id}.mp3`;
@@ -62,7 +68,7 @@ async function main() {
       console.warn(`  ✗ ${hanzi}: ${(err as Error).message}`);
     }
   }
-  console.log(`\n✅ backfilled ${fixed}, failed ${failed}`);
+  console.log(`\n✅ backfilled ${fixed}, failed ${failed}, skipped ${skipped} (non-Chinese)`);
 }
 
 main().catch((e) => {

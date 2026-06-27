@@ -27,7 +27,8 @@ function arg(name: string, fallback?: string): string | undefined {
 const APKG = arg("apkg", ".context/attachments/02i6gK/Spoonfed_Chinese.apkg")!;
 const USERNAME = arg("user", "demo")!;
 const DECK_OVERRIDE = arg("deck");
-const LIMIT = arg("limit") ? Number(arg("limit")) : undefined;
+const limitArg = arg("limit");
+const LIMIT = limitArg !== undefined ? Number(limitArg) : undefined;
 const WORKDIR = arg("workdir", ".context/apkg-import")!;
 const CONCURRENCY = 8;
 const BUCKET = "card-audio";
@@ -73,7 +74,7 @@ async function main() {
     notes: Note[];
   };
   let notes = manifest.notes;
-  if (LIMIT) notes = notes.slice(0, LIMIT);
+  if (LIMIT !== undefined) notes = notes.slice(0, LIMIT);
   const deckName = DECK_OVERRIDE ?? manifest.deckName;
   console.log(`Importing ${notes.length} cards into deck "${deckName}" for user "${USERNAME}"`);
 

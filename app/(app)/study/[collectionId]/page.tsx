@@ -72,10 +72,12 @@ export default async function DeckStudyPage({
       .select(STUDY_COLUMNS)
       .eq("collection_id", collectionId)
       .in("review_status", ["accepted", "edited"]);
+    // Secondary sort by id → deterministic pagination. Without it, Postgres can skip or
+    // duplicate rows with tied due/created_at across .range() page boundaries (>1000 cards).
     const q =
       mode === "scheduled"
-        ? base.lte("due", nowIso).order("due", { ascending: true })
-        : base.order("created_at", { ascending: true });
+        ? base.lte("due", nowIso).order("due", { ascending: true }).order("id", { ascending: true })
+        : base.order("created_at", { ascending: true }).order("id", { ascending: true });
     return (await q.range(from, from + PAGE - 1)).data ?? [];
   }
   const cards: Awaited<ReturnType<typeof fetchPage>> = [];
