@@ -132,8 +132,20 @@ export function StudyDeckClient({
     setShown(false);
   }, [deckId]);
 
+  // Anki-style end-of-session rest: when only not-yet-due learning cards remain, don't drill
+  // them early — show a "next card in ~Xm" screen with a live countdown. The user can opt into
+  // learn-ahead ("Study ahead now") to power through; otherwise no back-to-back repeat.
+  const [learnAhead, setLearnAhead] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
   const card = queue[0] ?? null;
   const leech = card ? isLeech(card) : false;
+
+  // prioritize() puts every available card ahead of not-yet-due learning cards, so if the head
+  // is a future-due learning card, nothing is available now → rest instead of repeating.
+  const cardDueMs = card ? Date.parse(card.due) : 0;
+  const cardLearning = !!card && (card.fsrs_state === "learning" || card.fsrs_state === "relearning");
+  const waitingForStep = mode === "scheduled" && cardLearning && cardDueMs > Date.now() && !learnAhead;
 
   // New / learning / due across what's left in the session — behaves like Anki's
   // bottom counts: New falls as you study new cards, Learning rises on Again, Due
@@ -261,7 +273,7 @@ export function StudyDeckClient({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!card || flagging) return;
+      if (!card || flagging || waitingForStep) return;
       if (e.code === "Space") {
         e.preventDefault();
         setShown((s) => !s);
@@ -272,7 +284,15 @@ export function StudyDeckClient({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [card, shown, flagging, grade]);
+  }, [card, shown, flagging, waitingForStep, grade]);
+
+  // While resting, tick once a second so the countdown updates and the card auto-appears the
+  // moment its step elapses (cardDueMs <= now → waitingForStep flips false → main render).
+  useEffect(() => {
+    if (!waitingForStep) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [waitingForStep]);
 
   if (!card) {
     return (
@@ -288,6 +308,28 @@ export function StudyDeckClient({
               <Link href={`/study/${deckId}?mode=cram`}>Cram more</Link>
             </Button>
           ) : null}
+          <Button asChild>
+            <Link href="/library">Back to decks</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (waitingForStep) {
+    const secs = Math.max(0, Math.ceil((cardDueMs - nowTick) / 1000));
+    const eta = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-xl font-medium">Done for now 🎉</p>
+        <p className="text-sm text-muted-foreground">
+          {triplet.learning} card{triplet.learning === 1 ? "" : "s"} still learning — next one ready in{" "}
+          <span className="font-semibold tabular-nums text-foreground">{eta}</span>.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setLearnAhead(true)}>
+            Study ahead now
+          </Button>
           <Button asChild>
             <Link href="/library">Back to decks</Link>
           </Button>
