@@ -74,33 +74,6 @@ function Face({ text, emphasis }: { text: string; emphasis?: boolean }) {
   );
 }
 
-// Press-to-play (replayable) card audio, streamed from the private card-audio bucket via a
-// short-lived signed URL fetched on first play. No autoplay (docs: the user presses play).
-function AudioButton({ path }: { path: string }) {
-  const urlRef = useRef<string | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
-  const play = useCallback(async () => {
-    if (!urlRef.current) {
-      const supabase = createClient();
-      const { data, error } = await supabase.storage.from("card-audio").createSignedUrl(path, 3600);
-      if (error || !data?.signedUrl) {
-        toast.error("Couldn't load audio.");
-        return;
-      }
-      urlRef.current = data.signedUrl;
-    }
-    if (!audioRef.current) audioRef.current = new Audio(urlRef.current);
-    audioRef.current.currentTime = 0;
-    void audioRef.current.play().catch(() => toast.error("Couldn't play audio."));
-  }, [path]);
-  return (
-    <Button variant="outline" size="sm" className="mt-5" onClick={play}>
-      <Volume2 className="size-4" />
-      Play
-    </Button>
-  );
-}
-
 export function StudyDeckClient({
   deckId,
   name,
@@ -166,6 +139,39 @@ export function StudyDeckClient({
     () => (card && mode === "scheduled" ? previewIntervals(card) : null),
     [card, mode],
   );
+
+  // Preload the current card's audio — mint the signed URL and start buffering the moment
+  // the card appears (while you read the front) — so pressing Play is instant instead of
+  // waiting on two round-trips (sign + download). Replayable from the start each press.
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    audioElRef.current?.pause();
+    audioElRef.current = null;
+    const path = card?.audio_path;
+    if (!path) return;
+    let cancelled = false;
+    const supabase = createClient();
+    void supabase.storage
+      .from("card-audio")
+      .createSignedUrl(path, 3600)
+      .then(({ data }) => {
+        if (cancelled || !data?.signedUrl) return;
+        const a = new Audio(data.signedUrl);
+        a.preload = "auto";
+        a.load();
+        audioElRef.current = a;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [card?.id, card?.audio_path]);
+
+  const playAudio = useCallback(() => {
+    const a = audioElRef.current;
+    if (!a) return;
+    a.currentTime = 0;
+    void a.play().catch(() => toast.error("Couldn't play audio."));
+  }, []);
 
   const resetCardUi = useCallback(() => {
     setShown(false);
@@ -298,7 +304,12 @@ export function StudyDeckClient({
             <>
               <hr className="mx-auto my-6 w-24 border-border" />
               <Face text={answer} emphasis />
-              {card.audio_path && <AudioButton key={card.id} path={card.audio_path} />}
+              {card.audio_path && (
+                <Button variant="outline" size="sm" className="mt-5" onClick={playAudio}>
+                  <Volume2 className="size-4" />
+                  Play
+                </Button>
+              )}
             </>
           )}
         </div>
