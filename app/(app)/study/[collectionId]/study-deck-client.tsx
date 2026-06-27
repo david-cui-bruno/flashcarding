@@ -62,6 +62,22 @@ function shuffle<T>(arr: T[]): T[] {
   return a;
 }
 
+// Order the scheduled queue like Anki (docs/SCHEDULING.md: "copies modern Anki"): a
+// learning/relearning card whose step has elapsed (due ≤ now) comes FIRST, then new/review
+// cards in due order, then learning cards still waiting out their step. Re-applied on every
+// grade, so a failed card resurfaces the moment its 1m/10m step is up — interleaved among
+// new cards, not buried behind the whole pile. (New cards carry past/now due times that
+// would otherwise sort a just-failed card, due in the near future, to the very end.)
+function prioritize(cards: StudyCard[], nowMs: number): StudyCard[] {
+  const group = (c: StudyCard) => {
+    const learning = c.fsrs_state === "learning" || c.fsrs_state === "relearning";
+    if (learning && Date.parse(c.due) <= nowMs) return 0;
+    if (!learning) return 1;
+    return 2;
+  };
+  return [...cards].sort((a, b) => group(a) - group(b) || Date.parse(a.due) - Date.parse(b.due));
+}
+
 // A card face. A second line (e.g. pinyin under the hanzi, joined with "\n" at import)
 // renders smaller + muted so the primary line stays the focus.
 function Face({ text, emphasis }: { text: string; emphasis?: boolean }) {
@@ -90,7 +106,7 @@ export function StudyDeckClient({
   // either dropped (graduated to a multi-day review) or re-inserted in due order
   // (still in a short learning/relearning step → seen again this session).
   const [queue, setQueue] = useState<StudyCard[]>(() =>
-    mode === "cram" ? shuffle(cards) : [...cards].sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0)),
+    mode === "cram" ? shuffle(cards) : prioritize(cards, Date.now()),
   );
   const [shown, setShown] = useState(false);
   const [reviewed, setReviewed] = useState(0);
@@ -210,11 +226,10 @@ export function StudyDeckClient({
         };
         setQueue((q) => {
           const tail = q.slice(1);
-          if (updated.fsrs_state === "review") return tail; // graduated → done this session
-          const idx = tail.findIndex((c) => c.due > updated.due);
-          if (idx === -1) tail.push(updated);
-          else tail.splice(idx, 0, updated);
-          return tail;
+          // Graduated to a multi-day review → done this session. Otherwise re-queue and
+          // re-order by Anki rules so it returns when its learning step elapses.
+          const next = updated.fsrs_state === "review" ? tail : [...tail, updated];
+          return prioritize(next, Date.now());
         });
       }
 
