@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Library,
   Plus,
+  ClipboardPaste,
   Inbox,
   BarChart3,
   Settings,
@@ -92,6 +93,12 @@ function Sidebar({ username, triageCount }: { username: string; triageCount: num
         <Link href="/new">
           <Plus className="size-[17px]" />
           New deck
+        </Link>
+      </Button>
+      <Button asChild variant="ghost" size="sm" className="mt-1.5 w-full justify-center text-muted-foreground">
+        <Link href="/import">
+          <ClipboardPaste className="size-4" />
+          Import cards
         </Link>
       </Button>
 

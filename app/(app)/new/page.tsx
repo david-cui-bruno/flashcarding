@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import Link from "next/link";
 import { Upload, Sparkles, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ export default function NewPage() {
           <h1 className="text-2xl font-semibold leading-tight md:text-3xl">Add a document</h1>
           <p className="mt-2 text-sm text-muted-foreground md:text-[0.95rem]">
             We&rsquo;ll turn it into atomic flashcards — a new deck is made from it.
+          </p>
+          <p className="mt-3 text-sm">
+            <Link href="/import" className="font-medium text-primary underline-offset-2 hover:underline">
+              Already have cards? Import them →
+            </Link>
           </p>
         </div>
 
