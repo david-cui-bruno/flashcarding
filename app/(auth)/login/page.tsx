@@ -59,10 +59,10 @@ export default function LoginPage() {
           {pending ? "Logging in…" : "Log in"}
         </button>
 
-        <p className="text-center text-sm">
-          No account?{" "}
-          <Link href="/signup" className="underline">
-            Sign up
+        <p className="pt-1 text-center text-sm">
+          New here?{" "}
+          <Link href="/signup" className="font-semibold underline underline-offset-2">
+            Create an account
           </Link>
         </p>
       </form>

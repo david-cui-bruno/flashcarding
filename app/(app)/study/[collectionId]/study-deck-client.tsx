@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Flag } from "lucide-react";
+import { Flag, Volume2, ArrowLeftRight } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { createClient } from "@/lib/supabase/client";
 import { schedule, previewIntervals } from "@/lib/scheduling/fsrs";
 import { isLeech } from "@/lib/scheduling/leech";
 import { gradeCard, flagBadCard } from "../actions";
@@ -30,6 +31,7 @@ export type StudyCard = {
   reps: number;
   last_review: string | null;
   learning_steps: number;
+  audio_path: string | null;
 };
 
 type Mode = "scheduled" | "cram";
@@ -41,11 +43,14 @@ const GRADES = [
   { g: 4, label: "Easy", key: "easy", cls: "hover:bg-[#f3f8ff] hover:border-[#bfdbfe]", int: "text-new" },
 ] as const;
 
-// Default direction is fact → term (docs/CARD-QUALITY.md).
-function faces(card: StudyCard): { prompt: string; answer: string } {
-  return card.prompt_direction === "term_to_definition"
-    ? { prompt: card.term, answer: card.definition }
-    : { prompt: card.definition, answer: card.term };
+// Default direction is fact → term (docs/CARD-QUALITY.md). `flipped` swaps the whole
+// session's front/back (e.g. study English → recall the Chinese).
+function faces(card: StudyCard, flipped: boolean): { prompt: string; answer: string } {
+  const base =
+    card.prompt_direction === "term_to_definition"
+      ? { prompt: card.term, answer: card.definition }
+      : { prompt: card.definition, answer: card.term };
+  return flipped ? { prompt: base.answer, answer: base.prompt } : base;
 }
 
 function shuffle<T>(arr: T[]): T[] {
@@ -55,6 +60,34 @@ function shuffle<T>(arr: T[]): T[] {
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
+}
+
+// Order the scheduled queue like Anki (docs/SCHEDULING.md: "copies modern Anki"): a
+// learning/relearning card whose step has elapsed (due ≤ now) comes FIRST, then new/review
+// cards in due order, then learning cards still waiting out their step. Re-applied on every
+// grade, so a failed card resurfaces the moment its 1m/10m step is up — interleaved among
+// new cards, not buried behind the whole pile. (New cards carry past/now due times that
+// would otherwise sort a just-failed card, due in the near future, to the very end.)
+function prioritize(cards: StudyCard[], nowMs: number): StudyCard[] {
+  const group = (c: StudyCard) => {
+    const learning = c.fsrs_state === "learning" || c.fsrs_state === "relearning";
+    if (learning && Date.parse(c.due) <= nowMs) return 0;
+    if (!learning) return 1;
+    return 2;
+  };
+  return [...cards].sort((a, b) => group(a) - group(b) || Date.parse(a.due) - Date.parse(b.due));
+}
+
+// A card face. A second line (e.g. pinyin under the hanzi, joined with "\n" at import)
+// renders smaller + muted so the primary line stays the focus.
+function Face({ text, emphasis }: { text: string; emphasis?: boolean }) {
+  const [primary, ...rest] = text.split("\n");
+  return (
+    <>
+      <p className={cn("text-2xl leading-relaxed", emphasis && "font-semibold leading-snug")}>{primary}</p>
+      {rest.length > 0 && <p className="mt-1.5 text-lg text-muted-foreground">{rest.join(" ")}</p>}
+    </>
+  );
 }
 
 export function StudyDeckClient({
@@ -73,15 +106,46 @@ export function StudyDeckClient({
   // either dropped (graduated to a multi-day review) or re-inserted in due order
   // (still in a short learning/relearning step → seen again this session).
   const [queue, setQueue] = useState<StudyCard[]>(() =>
-    mode === "cram" ? shuffle(cards) : [...cards].sort((a, b) => (a.due < b.due ? -1 : a.due > b.due ? 1 : 0)),
+    mode === "cram" ? shuffle(cards) : prioritize(cards, Date.now()),
   );
   const [shown, setShown] = useState(false);
   const [reviewed, setReviewed] = useState(0);
   const [flagging, setFlagging] = useState(false);
   const [reason, setReason] = useState("");
 
+  // Flip the whole session's front/back, persisted per deck. Audio stays on the revealed
+  // side (it's the Chinese pronunciation — useful whichever way you study).
+  const [flipped, setFlipped] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem(`dory-flip-${deckId}`) === "1") setFlipped(true);
+    } catch {}
+  }, [deckId]);
+  const toggleFlip = useCallback(() => {
+    setFlipped((f) => {
+      const next = !f;
+      try {
+        localStorage.setItem(`dory-flip-${deckId}`, next ? "1" : "0");
+      } catch {}
+      return next;
+    });
+    setShown(false);
+  }, [deckId]);
+
+  // Anki-style end-of-session rest: when only not-yet-due learning cards remain, don't drill
+  // them early — show a "next card in ~Xm" screen with a live countdown. The user can opt into
+  // learn-ahead ("Study ahead now") to power through; otherwise no back-to-back repeat.
+  const [learnAhead, setLearnAhead] = useState(false);
+  const [nowTick, setNowTick] = useState(() => Date.now());
+
   const card = queue[0] ?? null;
   const leech = card ? isLeech(card) : false;
+
+  // prioritize() puts every available card ahead of not-yet-due learning cards, so if the head
+  // is a future-due learning card, nothing is available now → rest instead of repeating.
+  const cardDueMs = card ? Date.parse(card.due) : 0;
+  const cardLearning = !!card && (card.fsrs_state === "learning" || card.fsrs_state === "relearning");
+  const waitingForStep = mode === "scheduled" && cardLearning && cardDueMs > Date.now() && !learnAhead;
 
   // New / learning / due across what's left in the session — behaves like Anki's
   // bottom counts: New falls as you study new cards, Learning rises on Again, Due
@@ -103,6 +167,51 @@ export function StudyDeckClient({
     () => (card && mode === "scheduled" ? previewIntervals(card) : null),
     [card, mode],
   );
+
+  // Preload the current card's audio — mint the signed URL and start buffering the moment
+  // the card appears (while you read the front) — so pressing Play is instant instead of
+  // waiting on two round-trips (sign + download). Replayable from the start each press.
+  const audioElRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    audioElRef.current?.pause();
+    audioElRef.current = null;
+    const path = card?.audio_path;
+    if (!path) return;
+    let cancelled = false;
+    const supabase = createClient();
+    void supabase.storage
+      .from("card-audio")
+      .createSignedUrl(path, 3600)
+      .then(({ data }) => {
+        if (cancelled || !data?.signedUrl) return;
+        const a = new Audio(data.signedUrl);
+        a.preload = "auto";
+        a.load();
+        audioElRef.current = a;
+      });
+    return () => {
+      cancelled = true;
+      audioElRef.current?.pause(); // stop playback when leaving the card / unmounting
+    };
+  }, [card?.id, card?.audio_path]);
+
+  const playAudio = useCallback(async () => {
+    const path = card?.audio_path;
+    if (!path) return;
+    // Usually preloaded; if Play is pressed before the preload resolved, load on demand.
+    if (!audioElRef.current) {
+      const supabase = createClient();
+      const { data } = await supabase.storage.from("card-audio").createSignedUrl(path, 3600);
+      if (!audioElRef.current && data?.signedUrl) audioElRef.current = new Audio(data.signedUrl);
+    }
+    const a = audioElRef.current;
+    if (!a) {
+      toast.error("Couldn't load audio.");
+      return;
+    }
+    a.currentTime = 0;
+    void a.play().catch(() => toast.error("Couldn't play audio."));
+  }, [card?.id, card?.audio_path]);
 
   const resetCardUi = useCallback(() => {
     setShown(false);
@@ -141,11 +250,10 @@ export function StudyDeckClient({
         };
         setQueue((q) => {
           const tail = q.slice(1);
-          if (updated.fsrs_state === "review") return tail; // graduated → done this session
-          const idx = tail.findIndex((c) => c.due > updated.due);
-          if (idx === -1) tail.push(updated);
-          else tail.splice(idx, 0, updated);
-          return tail;
+          // Graduated to a multi-day review → done this session. Otherwise re-queue and
+          // re-order by Anki rules so it returns when its learning step elapses.
+          const next = updated.fsrs_state === "review" ? tail : [...tail, updated];
+          return prioritize(next, Date.now());
         });
       }
 
@@ -165,7 +273,7 @@ export function StudyDeckClient({
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!card || flagging) return;
+      if (!card || flagging || waitingForStep) return;
       if (e.code === "Space") {
         e.preventDefault();
         setShown((s) => !s);
@@ -176,7 +284,15 @@ export function StudyDeckClient({
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [card, shown, flagging, grade]);
+  }, [card, shown, flagging, waitingForStep, grade]);
+
+  // While resting, tick once a second so the countdown updates and the card auto-appears the
+  // moment its step elapses (cardDueMs <= now → waitingForStep flips false → main render).
+  useEffect(() => {
+    if (!waitingForStep) return;
+    const t = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [waitingForStep]);
 
   if (!card) {
     return (
@@ -200,10 +316,45 @@ export function StudyDeckClient({
     );
   }
 
-  const { prompt, answer } = faces(card);
+  if (waitingForStep) {
+    const secs = Math.max(0, Math.ceil((cardDueMs - nowTick) / 1000));
+    const eta = secs >= 60 ? `${Math.floor(secs / 60)}m ${secs % 60}s` : `${secs}s`;
+    return (
+      <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
+        <p className="text-xl font-medium">Done for now 🎉</p>
+        <p className="text-sm text-muted-foreground">
+          {triplet.learning} card{triplet.learning === 1 ? "" : "s"} still learning — next one ready in{" "}
+          <span className="font-semibold tabular-nums text-foreground">{eta}</span>.
+        </p>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setLearnAhead(true)}>
+            Study ahead now
+          </Button>
+          <Button asChild>
+            <Link href="/library">Back to decks</Link>
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  const { prompt, answer } = faces(card, flipped);
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* flip front/back for the whole session (persisted per deck) */}
+      <button
+        onClick={toggleFlip}
+        aria-pressed={flipped}
+        title="Flip front / back"
+        className={cn(
+          "fixed bottom-5 right-5 z-10 flex items-center gap-1.5 rounded-full border border-border bg-card px-3.5 py-2 text-[0.78rem] font-medium shadow-sm transition-colors hover:bg-muted",
+          flipped && "border-primary/50 text-primary",
+        )}
+      >
+        <ArrowLeftRight className="size-4" />
+        Flip
+      </button>
       {/* content anchored toward the top, plain text, no card */}
       <div className="flex flex-1 flex-col items-center px-6 pt-16 text-center">
         <div className="w-full max-w-[620px]">
@@ -217,11 +368,17 @@ export function StudyDeckClient({
               .
             </div>
           )}
-          <p className="text-2xl leading-relaxed">{prompt}</p>
+          <Face text={prompt} />
           {shown && (
             <>
               <hr className="mx-auto my-6 w-24 border-border" />
-              <p className="text-2xl font-semibold leading-snug">{answer}</p>
+              <Face text={answer} emphasis />
+              {card.audio_path && (
+                <Button variant="outline" size="sm" className="mt-5" onClick={playAudio}>
+                  <Volume2 className="size-4" />
+                  Play
+                </Button>
+              )}
             </>
           )}
         </div>

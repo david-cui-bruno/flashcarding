@@ -41,6 +41,7 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          audio_path: string | null
           back_image_path: string | null
           collection_id: string | null
           created_at: string
@@ -67,6 +68,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          audio_path?: string | null
           back_image_path?: string | null
           collection_id?: string | null
           created_at?: string
@@ -93,6 +95,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          audio_path?: string | null
           back_image_path?: string | null
           collection_id?: string | null
           created_at?: string

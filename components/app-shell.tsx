@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   Library,
   Plus,
+  ClipboardPaste,
   Inbox,
   BarChart3,
   Settings,
@@ -75,6 +76,7 @@ function HubChrome({
 }
 
 function Sidebar({ username, triageCount }: { username: string; triageCount: number }) {
+  const pathname = usePathname();
   return (
     <aside className="sticky top-0 hidden h-screen w-62 flex-none flex-col border-r border-sidebar-border bg-sidebar p-4 md:flex">
       <Link href="/library" className="flex items-center gap-2 px-2 pb-5 pt-2">
@@ -92,6 +94,20 @@ function Sidebar({ username, triageCount }: { username: string; triageCount: num
         <Link href="/new">
           <Plus className="size-[17px]" />
           New deck
+        </Link>
+      </Button>
+      <Button
+        asChild
+        variant="ghost"
+        size="sm"
+        className={cn(
+          "mt-1.5 w-full justify-center",
+          pathname.startsWith("/import") ? "text-primary" : "text-muted-foreground",
+        )}
+      >
+        <Link href="/import">
+          <ClipboardPaste className="size-4" />
+          Import cards
         </Link>
       </Button>
 
@@ -163,6 +179,7 @@ function MobileTabBar({ username }: { username: string }) {
   const pathname = usePathname();
   const decksActive = pathname === "/library" || pathname.startsWith("/collections");
   const newActive = pathname.startsWith("/new");
+  const importActive = pathname.startsWith("/import");
   return (
     <nav className="fixed inset-x-0 bottom-0 z-30 flex border-t border-border bg-card/90 px-2 pb-[calc(0.7rem+env(safe-area-inset-bottom))] pt-2.5 backdrop-blur-md md:hidden">
       <Link href="/library" className={cn("flex flex-1 flex-col items-center gap-1 py-0.5 text-[0.66rem] font-medium", decksActive ? "text-primary" : "text-muted-foreground")}>
@@ -174,6 +191,10 @@ function MobileTabBar({ username }: { username: string }) {
           <Plus className="size-[18px]" strokeWidth={2.2} />
         </span>
         New
+      </Link>
+      <Link href="/import" className={cn("flex flex-1 flex-col items-center gap-1 py-0.5 text-[0.66rem] font-medium", importActive ? "text-primary" : "text-muted-foreground")}>
+        <ClipboardPaste className="size-[22px]" />
+        Import
       </Link>
       <ProfileMenu username={username} side="top" align="end">
         <button className="flex flex-1 flex-col items-center gap-1 py-0.5 text-[0.66rem] font-medium text-muted-foreground">
