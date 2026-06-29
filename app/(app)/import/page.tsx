@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { importPastedCards } from "./actions";
+import { ApkgUploader } from "./apkg-uploader";
 
 export default function ImportPage() {
   const [state, action, pending] = useActionState(importPastedCards, null);
@@ -63,6 +64,21 @@ export default function ImportPage() {
             </Button>
           </div>
         </form>
+
+        <div className="my-8 flex items-center gap-3 text-[0.7rem] font-medium uppercase tracking-wide text-muted-foreground">
+          <span className="h-px flex-1 bg-border" />
+          or upload an Anki deck
+          <span className="h-px flex-1 bg-border" />
+        </div>
+
+        <div>
+          <h2 className="text-lg font-semibold">From an Anki .apkg</h2>
+          <p className="mb-3 mt-1 text-sm text-muted-foreground">
+            Cards (and any audio) import straight from the file — parsed in your browser, no upload
+            limit. Pick which fields become the front and back.
+          </p>
+          <ApkgUploader />
+        </div>
       </div>
     </div>
   );
