@@ -35,8 +35,17 @@ export async function parseApkg(buf: ArrayBuffer): Promise<ParsedApkg> {
 
   // Pass 1: decompress only the DB + the media manifest (not the media blobs).
   const meta = unzipSync(u8, { filter: (f) => DB_NAMES.includes(f.name) || f.name === "media" });
-  const dbBytes = DB_NAMES.map((n) => meta[n]).find(Boolean);
-  if (!dbBytes) throw new Error("This file doesn't look like an Anki .apkg (no collection database).");
+  // Modern Anki (2.1.50+) exports collection.anki21b as a zstd stream; legacy uses a raw
+  // SQLite collection.anki21/.anki2. Decompress the modern DB before handing it to sql.js.
+  let dbBytes: Uint8Array;
+  if (meta["collection.anki21b"]) {
+    const { decompress } = await import("fzstd");
+    dbBytes = decompress(meta["collection.anki21b"]);
+  } else {
+    const raw = meta["collection.anki21"] || meta["collection.anki2"];
+    if (!raw) throw new Error("This file doesn't look like an Anki .apkg (no collection database).");
+    dbBytes = raw;
+  }
 
   const SQL = await getSql();
   const db = new SQL.Database(dbBytes);
@@ -89,16 +98,25 @@ export async function parseApkg(buf: ArrayBuffer): Promise<ParsedApkg> {
   // Pass 2: decompress only the referenced sound files.
   const sounds = new Map<string, Uint8Array>();
   if (meta["media"] && refNames.size) {
-    const manifest = JSON.parse(strFromU8(meta["media"])) as Record<string, string>;
-    const origToNum: Record<string, string> = {};
-    for (const [num, orig] of Object.entries(manifest)) origToNum[orig] = num;
-    const wanted = new Set<string>();
-    for (const name of refNames) if (origToNum[name]) wanted.add(origToNum[name]);
-    if (wanted.size) {
-      const blobs = unzipSync(u8, { filter: (f) => wanted.has(f.name) });
-      for (const name of refNames) {
-        const num = origToNum[name];
-        if (num && blobs[num]) sounds.set(name, blobs[num]);
+    // Legacy media manifest is JSON (num → original name). Modern exports use protobuf — if it
+    // won't parse, degrade gracefully to cards-without-audio instead of failing the import.
+    let manifest: Record<string, string> | null = null;
+    try {
+      manifest = JSON.parse(strFromU8(meta["media"])) as Record<string, string>;
+    } catch {
+      manifest = null;
+    }
+    if (manifest) {
+      const origToNum: Record<string, string> = {};
+      for (const [num, orig] of Object.entries(manifest)) origToNum[orig] = num;
+      const wanted = new Set<string>();
+      for (const name of refNames) if (origToNum[name]) wanted.add(origToNum[name]);
+      if (wanted.size) {
+        const blobs = unzipSync(u8, { filter: (f) => wanted.has(f.name) });
+        for (const name of refNames) {
+          const num = origToNum[name];
+          if (num && blobs[num]) sounds.set(name, blobs[num]);
+        }
       }
     }
   }

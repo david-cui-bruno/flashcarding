@@ -63,8 +63,10 @@ export function ApkgUploader() {
   const [importing, setImporting] = useState(false);
   const [progress, setProgress] = useState<{ phase: string; done: number; total: number } | null>(null);
 
+  // Field options come from the dominant note type's named fields; fall back to the widest note
+  // only when names are unknown (avoids offering indices the mapped model doesn't have).
   const fieldCount = parsed
-    ? Math.max(parsed.fieldNames.length, ...parsed.notes.map((n) => n.fields.length))
+    ? parsed.fieldNames.length || Math.max(1, ...parsed.notes.map((n) => n.fields.length))
     : 0;
   const fieldLabel = (i: number) => parsed?.fieldNames[i] || `Field ${i + 1}`;
   const audioCount = parsed ? parsed.notes.filter((n) => n.sound && parsed.sounds.has(n.sound)).length : 0;

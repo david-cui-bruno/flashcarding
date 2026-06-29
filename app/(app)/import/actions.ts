@@ -9,20 +9,23 @@ const MAX_ROWS = 5000;
 // One card per line: "term <tab|comma> definition". Quizlet's default export is tab between
 // fields + newline between cards; CSV uses commas. Split on the FIRST delimiter so commas
 // inside a definition survive. Skips blank / delimiter-less / empty rows.
-function parseRows(text: string): { term: string; definition: string }[] {
+function parseRows(text: string): { rows: { term: string; definition: string }[]; lineCount: number } {
+  const lines = text
+    .split(/\r?\n/)
+    .map((l) => l.trim())
+    .filter(Boolean);
+  // Pick ONE delimiter for the whole paste (Quizlet defaults to tab): tab if at least half the
+  // lines contain one — avoids a stray tab in a comma file flipping a single row's split.
+  const useTab = lines.filter((l) => l.includes("\t")).length * 2 >= lines.length;
   const rows: { term: string; definition: string }[] = [];
-  for (const raw of text.split(/\r?\n/)) {
-    const line = raw.trim();
-    if (!line) continue;
-    const tab = line.indexOf("\t");
-    const idx = tab >= 0 ? tab : line.indexOf(",");
+  for (const line of lines) {
+    const idx = useTab ? line.indexOf("\t") : line.indexOf(",");
     if (idx <= 0) continue; // no delimiter, or empty term
     const term = line.slice(0, idx).trim();
     const definition = line.slice(idx + 1).trim();
     if (term && definition) rows.push({ term, definition });
-    if (rows.length >= MAX_ROWS) break;
   }
-  return rows;
+  return { rows, lineCount: lines.length };
 }
 
 // Direct paste/CSV import — a new card type that BYPASSES the AI pipeline (no generation,
@@ -30,7 +33,10 @@ function parseRows(text: string): { term: string; definition: string }[] {
 // binary imports (Anki .apkg with media) use scripts/import-apkg.ts instead.
 export async function importPastedCards(_prev: ImportState, formData: FormData): Promise<ImportState> {
   const deckName = String(formData.get("deckName") ?? "").trim() || "Imported deck";
-  const rows = parseRows(String(formData.get("text") ?? ""));
+  const { rows, lineCount } = parseRows(String(formData.get("text") ?? ""));
+  if (lineCount > MAX_ROWS) {
+    return { error: `Too many lines (${lineCount}). Paste up to ${MAX_ROWS}, or use the .apkg uploader for big decks.` };
+  }
   if (rows.length === 0) {
     return { error: "No cards found. Use one per line: term, definition (or tab-separated)." };
   }
