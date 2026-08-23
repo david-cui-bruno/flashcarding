@@ -5,6 +5,23 @@ import { schedule, type FsrsUpdate } from "@/lib/scheduling/fsrs";
 
 type StudyMode = "scheduled" | "cram";
 
+// What a grade write resolved to, so the client's offline outbox (lib/offline/)
+// can tell "retry later" apart from "drop this forever":
+//   ok              — persisted (or an idempotent duplicate of an already-persisted review)
+//   unauthenticated — no session right now; keep the review queued and retry later
+//   card_missing    — the card is gone (deleted / not this user's) → drop permanently
+//   error           — unexpected DB failure → retry with backoff
+export type GradeReceipt = {
+  status: "ok" | "unauthenticated" | "card_missing" | "error";
+};
+
+// A client-generated review identity, passed when the review needs to be replayable:
+// `reviewId` becomes the study_reviews primary key so a replayed/retried review
+// upserts the same row instead of double-logging (ON CONFLICT DO NOTHING), and
+// `reviewedAt` records when the user actually studied (offline reviews arrive late —
+// metrics and retention must see the honest time, not the sync time).
+export type ReviewReceipt = { reviewId?: string; reviewedAt?: string };
+
 // The study session runs FSRS client-side (docs/SCHEDULING.md says scheduling is
 // client-side) so it can re-queue learning-step cards within the session. It passes
 // the resulting `update` here, which we persist as-is — this keeps the DB consistent
@@ -16,33 +33,65 @@ export async function gradeCard(
   grade: 1 | 2 | 3 | 4,
   mode: StudyMode = "scheduled",
   update?: FsrsUpdate,
-): Promise<void> {
+  receipt?: ReviewReceipt,
+): Promise<GradeReceipt> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
-  if (!user) return;
+  if (!user) return { status: "unauthenticated" };
+
+  const reviewRow = {
+    user_id: user.id,
+    card_id: cardId,
+    grade,
+    ...(receipt?.reviewId ? { id: receipt.reviewId } : {}),
+    ...(receipt?.reviewedAt ? { reviewed_at: receipt.reviewedAt } : {}),
+  };
+
+  // Idempotent when the client supplied a reviewId: a replay retry after a
+  // half-applied send hits ON CONFLICT DO NOTHING instead of double-logging.
+  async function insertReview(rowMode: StudyMode): Promise<GradeReceipt["status"]> {
+    const row = { ...reviewRow, mode: rowMode };
+    const { error } = receipt?.reviewId
+      ? await supabase.from("study_reviews").upsert(row, { onConflict: "id", ignoreDuplicates: true })
+      : await supabase.from("study_reviews").insert(row);
+    if (!error) return "ok";
+    // 23503 = foreign-key violation → the card no longer exists. Permanent.
+    return error.code === "23503" ? "card_missing" : "error";
+  }
 
   // Cram / free review never disturbs the FSRS schedule (docs/SCHEDULING.md): we log
   // the review for metrics but leave the card's `due`/scheduling columns untouched, so
   // blasting through a whole deck doesn't wreck the spacing FSRS computed.
   if (mode === "cram") {
-    await supabase
-      .from("study_reviews")
-      .insert({ user_id: user.id, card_id: cardId, grade, mode: "cram" });
-    return;
+    return { status: await insertReview("cram") };
   }
 
-  let fsrs = update;
-  if (!fsrs) {
-    const { data: card } = await supabase.from("cards").select("*").eq("id", cardId).single();
-    if (!card) return;
-    fsrs = schedule(card, grade);
+  // RLS scopes the read to the owner; a miss means the card was deleted (or was
+  // never this user's) — either way the queued review can never apply. Permanent.
+  const { data: card } = await supabase
+    .from("cards")
+    .select("*")
+    .eq("id", cardId)
+    .maybeSingle();
+  if (!card) return { status: "card_missing" };
+
+  const reviewedAt = receipt?.reviewedAt ? new Date(receipt.reviewedAt) : undefined;
+  const fsrs = update ?? schedule(card, grade, reviewedAt);
+
+  // Last-write-wins by review time, not arrival time: an offline review replayed
+  // hours late must not clobber FSRS state from a newer review that already landed
+  // (e.g. graded again on another device). The review row is still logged below —
+  // it truly happened — only the stale card-state write is skipped.
+  const stale =
+    card.last_review !== null && Date.parse(card.last_review) > Date.parse(fsrs.last_review);
+  if (!stale) {
+    const { error } = await supabase.from("cards").update(fsrs).eq("id", cardId);
+    if (error) return { status: "error" };
   }
-  await supabase.from("cards").update(fsrs).eq("id", cardId);
-  await supabase
-    .from("study_reviews")
-    .insert({ user_id: user.id, card_id: cardId, grade, mode: "scheduled" });
+
+  return { status: await insertReview("scheduled") };
 }
 
 // "This card is bad" during study. The single, user-initiated path for pulling a card out

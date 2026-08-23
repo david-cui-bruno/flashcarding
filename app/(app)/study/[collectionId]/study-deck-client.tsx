@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import Link from "next/link";
-import { Flag, Volume2, ArrowLeftRight } from "lucide-react";
+import { Flag, Volume2, ArrowLeftRight, CloudOff } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -10,30 +10,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { schedule, previewIntervals } from "@/lib/scheduling/fsrs";
 import { isLeech } from "@/lib/scheduling/leech";
+import type { StudyCard } from "@/lib/study/study-card";
+import { queueReview } from "@/lib/offline/sync";
+import { mergeCachedCards, patchCachedCard, removeCachedCard } from "@/lib/offline/deck-cache";
+import { useOnline } from "@/lib/offline/use-online";
 import { gradeCard, flagBadCard } from "../actions";
 import { hapticTap, hapticLapse } from "@/lib/haptics";
 
 // Full FSRS state travels to the client so the session can run the scheduler locally
 // (docs/SCHEDULING.md: FSRS is client-side) — for live interval previews and, crucially,
 // to re-queue a card that's still in a learning/relearning step so it reappears this
-// session (Anki-style learning steps).
-export type StudyCard = {
-  id: string;
-  term: string;
-  definition: string;
-  prompt_direction: "definition_to_term" | "term_to_definition";
-  lapses: number;
-  fsrs_state: "new" | "learning" | "review" | "relearning";
-  due: string;
-  stability: number;
-  difficulty: number;
-  elapsed_days: number;
-  scheduled_days: number;
-  reps: number;
-  last_review: string | null;
-  learning_steps: number;
-  audio_path: string | null;
-};
+// session (Anki-style learning steps). Shape lives in lib/study/study-card so the
+// offline cache (lib/offline/) can share it.
+export type { StudyCard } from "@/lib/study/study-card";
 
 type Mode = "scheduled" | "cram";
 
@@ -96,11 +85,15 @@ export function StudyDeckClient({
   name,
   cards,
   mode,
+  offline = false,
 }: {
   deckId: string;
   name: string;
   cards: StudyCard[];
   mode: Mode;
+  // True when this session was built from the IndexedDB cache (no server fetch) —
+  // grades then skip the server round-trip and go straight to the outbox.
+  offline?: boolean;
 }) {
   // The session queue. Cram = a fixed shuffled pass (no rescheduling). Scheduled =
   // a live queue ordered by due; the head is the current card, and a graded card is
@@ -113,6 +106,17 @@ export function StudyDeckClient({
   const [reviewed, setReviewed] = useState(0);
   const [flagging, setFlagging] = useState(false);
   const [reason, setReason] = useState("");
+  const online = useOnline();
+  // Show the offline pill when the session came from cache OR connectivity dropped
+  // mid-session (grades keep working either way — they queue to the outbox).
+  const showOffline = offline || !online;
+
+  // Write-through: a server-built session merges its (fresh) queue into the deck
+  // cache on mount, so this deck is studyable offline from now on.
+  useEffect(() => {
+    if (!offline) void mergeCachedCards(deckId, name, cards).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- initial payload only
+  }, []);
 
   // Flip the whole session's front/back, persisted per deck. Audio stays on the revealed
   // side (it's the Chinese pronunciation — useful whichever way you study).
@@ -221,8 +225,9 @@ export function StudyDeckClient({
   }, []);
 
   // Optimistic + client-scheduled: compute the next state locally (instant, no round
-  // trip), update the queue, and persist in the background. A failed write is rare and
-  // non-fatal (that card just isn't rescheduled), so we only toast.
+  // trip), update the queue, and persist in the background. If the write can't reach
+  // the server (offline, or any thrown failure) the review is queued to the IndexedDB
+  // outbox and replayed when connectivity returns — the study loop never blocks.
   const grade = useCallback(
     (g: 1 | 2 | 3 | 4) => {
       const cur = queue[0];
@@ -231,27 +236,53 @@ export function StudyDeckClient({
       if (g === 1) hapticLapse();
       else hapticTap();
 
+      const modeKey = mode === "cram" ? ("cram" as const) : ("scheduled" as const);
+      const u = mode === "cram" ? undefined : schedule(cur, g);
+      const reviewedAt = new Date().toISOString();
+      const reviewId = crypto.randomUUID();
+
+      const toOutbox = () =>
+        queueReview({
+          id: reviewId,
+          cardId: cur.id,
+          deckId,
+          grade: g,
+          mode: modeKey,
+          update: u,
+          reviewedAt,
+        }).catch(() => toast.error("Couldn't save that review."));
+
+      if (offline || !navigator.onLine) {
+        // Known-offline: don't even attempt the round trip.
+        void toOutbox();
+      } else {
+        void gradeCard(cur.id, g, modeKey, u, { reviewId, reviewedAt })
+          .then((r) => {
+            // Server unreachable at the app level (e.g. auth hiccup) → queue too.
+            if (r.status === "unauthenticated" || r.status === "error") return toOutbox();
+          })
+          .catch(toOutbox);
+      }
+
       if (mode === "cram") {
-        void gradeCard(cur.id, g, "cram").catch(() => toast.error("Couldn't save that review."));
         setQueue((q) => q.slice(1));
       } else {
-        const u = schedule(cur, g);
-        void gradeCard(cur.id, g, "scheduled", u).catch(() =>
-          toast.error("Couldn't save that review — it may not be rescheduled."),
-        );
         const updated: StudyCard = {
           ...cur,
-          due: u.due,
-          stability: u.stability,
-          difficulty: u.difficulty,
-          elapsed_days: u.elapsed_days,
-          scheduled_days: u.scheduled_days,
-          reps: u.reps,
-          lapses: u.lapses,
-          fsrs_state: u.fsrs_state,
-          last_review: u.last_review,
-          learning_steps: u.learning_steps,
+          due: u!.due,
+          stability: u!.stability,
+          difficulty: u!.difficulty,
+          elapsed_days: u!.elapsed_days,
+          scheduled_days: u!.scheduled_days,
+          reps: u!.reps,
+          lapses: u!.lapses,
+          fsrs_state: u!.fsrs_state,
+          last_review: u!.last_review,
+          learning_steps: u!.learning_steps,
         };
+        // Keep the offline cache in step with what the learner saw, so reopening
+        // this deck offline doesn't resurface already-graded cards.
+        void patchCachedCard(deckId, cur.id, updated).catch(() => {});
         setQueue((q) => {
           const tail = q.slice(1);
           // Graduated to a multi-day review → done this session. Otherwise re-queue and
@@ -264,16 +295,17 @@ export function StudyDeckClient({
       setReviewed((n) => n + 1);
       resetCardUi();
     },
-    [queue, mode, resetCardUi],
+    [queue, mode, deckId, offline, resetCardUi],
   );
 
   const flagBad = useCallback(() => {
     const cur = queue[0];
     if (!cur) return;
     void flagBadCard(cur.id, reason).catch(() => toast.error("Couldn't remove that card."));
+    void removeCachedCard(deckId, cur.id).catch(() => {});
     setQueue((q) => q.slice(1));
     resetCardUi();
-  }, [queue, reason, resetCardUi]);
+  }, [queue, reason, deckId, resetCardUi]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -346,6 +378,13 @@ export function StudyDeckClient({
 
   return (
     <div className="flex flex-1 flex-col">
+      {/* subtle offline indicator — studying from cache; reviews sync when back online */}
+      {showOffline && (
+        <div className="pointer-events-none fixed left-1/2 top-4 z-10 flex -translate-x-1/2 items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[0.72rem] font-medium text-muted-foreground shadow-sm">
+          <CloudOff className="size-3.5" />
+          Offline — reviews will sync
+        </div>
+      )}
       {/* flip front/back for the whole session (persisted per deck) */}
       <button
         onClick={toggleFlip}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -45,6 +45,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { renameCollection, deleteCollection } from "./actions";
+import { refreshDeckCachesThrottled } from "@/lib/offline/sync";
+import { useOnline } from "@/lib/offline/use-online";
+import { OfflineLibrary } from "./offline-library";
 
 export type DeckSummary = {
   id: string;
@@ -58,6 +61,17 @@ export type DeckSummary = {
 export function DecksHome({ decks, triageCount }: { decks: DeckSummary[]; triageCount: number }) {
   const [renameTarget, setRenameTarget] = useState<DeckSummary | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<DeckSummary | null>(null);
+  const online = useOnline();
+
+  // Write-through offline cache: every online library visit refreshes the decks'
+  // studyable cards in IndexedDB (throttled), so study keeps working offline.
+  useEffect(() => {
+    if (online) void refreshDeckCachesThrottled();
+  }, [online]);
+
+  // Offline → the cached-deck library (inline offline study sessions). The tiles
+  // below link to server routes that can't load without a connection.
+  if (!online) return <OfflineLibrary />;
 
   const empty = decks.length === 0;
 

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getSessionClaims } from "@/lib/supabase/auth";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import { OfflineSync } from "@/app/_pwa/offline-sync";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
@@ -25,6 +26,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
       <AppShell username={username} triageCount={count ?? 0}>
         {children}
       </AppShell>
+      <OfflineSync />
       <Toaster />
     </>
   );

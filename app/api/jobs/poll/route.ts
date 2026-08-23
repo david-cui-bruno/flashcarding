@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { processBatch } from "@/lib/generation/process";
+import { requirePro, isProRequiredError } from "@/lib/billing/entitlements";
 
 // POST /api/jobs/poll  { jobId }
 //
@@ -16,6 +17,14 @@ export async function POST(request: Request) {
   } = await supabase.auth.getUser();
   if (!user) {
     return Response.json({ error: "Not signed in." }, { status: 401 });
+  }
+  try {
+    await requirePro(user.id, supabase);
+  } catch (e) {
+    if (isProRequiredError(e)) {
+      return Response.json({ error: e.message, code: e.code }, { status: e.status });
+    }
+    throw e;
   }
 
   let jobId: string | undefined;

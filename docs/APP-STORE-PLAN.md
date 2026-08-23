@@ -39,7 +39,7 @@ heavy users. Proposed model:
 |---|---|---|
 | Capacitor iOS shell | ✅ builds + renders prod in Simulator | `mobile/`, app ID `com.learndory.app` |
 | Apple Developer account | ❌ | $99/yr, ~2 day approval. Longest lead time — start first. |
-| Guideline 4.2 (no thin wrappers) | ❌ | Needs native value: offline study cache, native push, haptics, StoreKit |
+| Guideline 4.2 (no thin wrappers) | 🟡 offline study + haptics done | Still needs: native push, StoreKit |
 | Sign in with Apple | ❌ | Mandatory because app has third-party login (Supabase auth) |
 | In-app purchase | ❌ | Digital goods must use IAP; no external payment links |
 | Privacy policy + nutrition label | ❌ | Needs a URL; declare data collection (auth, study data, uploaded docs) |
@@ -50,8 +50,16 @@ heavy users. Proposed model:
 
 Minimum credible set, roughly in build order:
 
-1. **Offline study**: cache due-card queue + review logging when offline, sync on
-   reconnect. Biggest real user value (study on subway). Largest work item.
+1. **Offline study** ✅ (2026-08-23): decks' studyable cards are write-through
+   cached to IndexedDB on library/study visits (`lib/offline/`); offline grades
+   queue to an outbox and replay ordered + idempotently on reconnect (client
+   UUID = `study_reviews` PK, honest `reviewed_at`, last-write-wins on FSRS
+   state); the service worker (`public/sw.js`) serves the cached shell so
+   `/library` boots offline and renders the cached-deck library with inline
+   study sessions. Verified by `scripts/test-offline-outbox.ts` (replay unit
+   tests) + `scripts/walk-offline.mjs` (Playwright offline E2E). Works in any
+   browser/PWA and therefore in the Capacitor shell; needs a real-device
+   (Simulator airplane-mode) pass before submission.
 2. **Native push** via APNs (replace/augment web push for the wrapped app).
 3. **Haptics** on grade buttons (trivial via Capacitor Haptics plugin).
 4. **StoreKit subscription** (required for monetization anyway).
@@ -72,5 +80,6 @@ Minimum credible set, roughly in build order:
 
 - [ ] Pricing: confirm free/Pro split and price points.
 - [ ] RevenueCat vs raw StoreKit 2.
-- [ ] Offline scope for v1 (read-only cram vs full due-queue sync).
+- [x] Offline scope for v1: full due-queue + cram from cache, with review outbox
+      sync (shipped 2026-08-23; generation/import/triage stay online-only).
 - [ ] Android later? Capacitor makes it cheap, but App Store first.
