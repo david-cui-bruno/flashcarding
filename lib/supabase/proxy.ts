@@ -39,6 +39,8 @@ export async function updateSession(request: NextRequest) {
   // installable), and the reminder cron authenticates itself via CRON_SECRET.
   const isPublic =
     isAuthRoute ||
+    path === "/privacy" ||
+    path === "/support" ||
     path === "/sw.js" ||
     path === "/manifest.webmanifest" ||
     path.startsWith("/icons/") ||

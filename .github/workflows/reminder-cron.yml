@@ -1,0 +1,22 @@
+name: Reminder cron
+
+# Hourly ping of the reminder endpoint. Replaces the Vercel Cron entry
+# (vercel.json), which required the Pro plan for hourly schedules — the team is
+# on Hobby now. The job is idempotent per user per local day, so schedule
+# jitter from Actions (runs can be minutes late) is harmless.
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hit /api/cron/reminders
+        run: |
+          code=$(curl -s -o /tmp/body -w "%{http_code}" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://cardstock-framewise-health.vercel.app/api/cron/reminders)
+          cat /tmp/body
+          [ "$code" = "200" ] || { echo "cron ping failed with $code"; exit 1; }

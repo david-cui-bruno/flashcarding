@@ -1,0 +1,10 @@
+{
+  "appId": "com.learndory.app",
+  "appName": "Dory",
+  "webDir": "www",
+  "server": {
+    "url": "https://cardstock-framewise-health.vercel.app",
+    "allowNavigation": ["cardstock-framewise-health.vercel.app"]
+  },
+  "ios": { "contentInset": "always" }
+}
