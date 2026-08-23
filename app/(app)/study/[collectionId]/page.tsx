@@ -1,12 +1,12 @@
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { STUDY_COLUMNS, type StudyCard } from "@/lib/study/study-card";
 import { StudyGate } from "./study-gate";
-import { StudyDeckClient, type StudyCard } from "./study-deck-client";
+import { StudyDeckClient } from "./study-deck-client";
 
-// Full FSRS state — the session runs the scheduler client-side to preview grade
-// intervals and re-queue learning-step cards (Anki-style). Display fields too.
-const STUDY_COLUMNS =
-  "id, term, definition, prompt_direction, lapses, fsrs_state, due, stability, difficulty, elapsed_days, scheduled_days, reps, last_review, learning_steps, audio_path";
+// STUDY_COLUMNS (lib/study/study-card) carries the full FSRS state — the session
+// runs the scheduler client-side to preview grade intervals and re-queue
+// learning-step cards (Anki-style). Display fields too.
 
 export default async function DeckStudyPage({
   params,
