@@ -11,6 +11,7 @@ import { createClient } from "@/lib/supabase/client";
 import { schedule, previewIntervals } from "@/lib/scheduling/fsrs";
 import { isLeech } from "@/lib/scheduling/leech";
 import { gradeCard, flagBadCard } from "../actions";
+import { hapticTap, hapticLapse } from "@/lib/haptics";
 
 // Full FSRS state travels to the client so the session can run the scheduler locally
 // (docs/SCHEDULING.md: FSRS is client-side) — for live interval previews and, crucially,
@@ -226,6 +227,9 @@ export function StudyDeckClient({
     (g: 1 | 2 | 3 | 4) => {
       const cur = queue[0];
       if (!cur) return;
+
+      if (g === 1) hapticLapse();
+      else hapticTap();
 
       if (mode === "cram") {
         void gradeCard(cur.id, g, "cram").catch(() => toast.error("Couldn't save that review."));
