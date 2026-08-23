@@ -258,6 +258,9 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          plan: string
+          plan_expires_at: string | null
+          plan_source: string | null
           reminder_enabled: boolean
           reminder_last_sent_on: string | null
           reminder_time: string
@@ -268,6 +271,9 @@ export type Database = {
         Insert: {
           created_at?: string
           id: string
+          plan?: string
+          plan_expires_at?: string | null
+          plan_source?: string | null
           reminder_enabled?: boolean
           reminder_last_sent_on?: string | null
           reminder_time?: string
@@ -278,6 +284,9 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          plan?: string
+          plan_expires_at?: string | null
+          plan_source?: string | null
           reminder_enabled?: boolean
           reminder_last_sent_on?: string | null
           reminder_time?: string

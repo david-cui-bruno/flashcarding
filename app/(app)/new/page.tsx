@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Upload, Sparkles, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { generateFromText, generateFromFile } from "./actions";
 
@@ -15,6 +16,7 @@ export default function NewPage() {
   const [text, setText] = useState("");
   const [dragging, setDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [proBlocked, setProBlocked] = useState(false);
   const [pending, startTransition] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -23,14 +25,16 @@ export default function NewPage() {
   function pickFile(f: File | null | undefined) {
     if (!f) return;
     setError(null);
+    setProBlocked(false);
     setFile(f);
   }
 
   function submit() {
     if (!canSubmit || pending) return;
     setError(null);
+    setProBlocked(false);
     startTransition(async () => {
-      let res: { error: string } | null;
+      let res: { error: string; code?: "PRO_REQUIRED" } | null;
       if (file) {
         const fd = new FormData();
         fd.set("file", file);
@@ -41,7 +45,10 @@ export default function NewPage() {
         res = await generateFromText(null, fd);
       }
       // Success redirects server-side; only an error returns here.
-      if (res?.error) setError(res.error);
+      if (res?.error) {
+        setError(res.error);
+        setProBlocked(res.code === "PRO_REQUIRED");
+      }
     });
   }
 
@@ -133,7 +140,25 @@ export default function NewPage() {
           className="min-h-36"
         />
 
-        {error && <p className="mt-3 text-sm text-destructive">{error}</p>}
+        {error && (
+          proBlocked ? (
+            <Card className="mt-4 border-primary/25 bg-accent">
+              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="font-medium">Dory Pro unlocks AI card generation</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Study and imports stay free. Upgrade when you want Dory to make cards for you.
+                  </p>
+                </div>
+                <Button asChild>
+                  <Link href="/settings">View plans</Link>
+                </Button>
+              </CardContent>
+            </Card>
+          ) : (
+            <p className="mt-3 text-sm text-destructive">{error}</p>
+          )
+        )}
 
         <div className="mt-7 flex items-center justify-between gap-3">
           <span className="text-[0.8rem] text-muted-foreground">

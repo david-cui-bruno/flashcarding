@@ -5,9 +5,10 @@ import { createClient } from "@/lib/supabase/server";
 import { submitGenerationBatch } from "@/lib/generation/submit";
 import { selectFewShotExamples } from "@/lib/feedback";
 import { parseToMarkdown, extensionOf, isSupported, type ParseMode } from "@/lib/ingestion";
+import { requirePro, isProRequiredError } from "@/lib/billing/entitlements";
 import type { Database } from "@/lib/types/database";
 
-type GenState = { error: string } | null;
+type GenState = { error: string; code?: "PRO_REQUIRED" } | null;
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 type SourceKind = Database["public"]["Enums"]["source_kind"];
 
@@ -90,6 +91,12 @@ export async function generateFromText(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in." };
+  try {
+    await requirePro(user.id, supabase);
+  } catch (e) {
+    if (isProRequiredError(e)) return { error: e.message, code: "PRO_REQUIRED" };
+    throw e;
+  }
 
   const title = text.split("\n")[0].slice(0, 80) || "Pasted text";
   return startDeckGeneration(supabase, user.id, "paste", title, text);
@@ -116,6 +123,12 @@ export async function generateFromFile(
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { error: "Not signed in." };
+  try {
+    await requirePro(user.id, supabase);
+  } catch (e) {
+    if (isProRequiredError(e)) return { error: e.message, code: "PRO_REQUIRED" };
+    throw e;
+  }
 
   // "Complex layout" toggle → force the layout-aware Docling parser. Otherwise
   // auto-select (MarkItDown fast path, Docling fallback on low-yield extraction).
