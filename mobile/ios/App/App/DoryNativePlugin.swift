@@ -15,6 +15,7 @@ public class DoryNativePlugin: CAPPlugin, CAPBridgedPlugin,
 
     private var pendingCalls: [String: CAPPluginCall] = [:]
     private var callbackIdsByController: [ObjectIdentifier: String] = [:]
+    private var pendingControllers: [ObjectIdentifier: ASAuthorizationController] = [:]
 
     @objc public func signInWithApple(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in
@@ -29,7 +30,9 @@ public class DoryNativePlugin: CAPPlugin, CAPBridgedPlugin,
             controller.presentationContextProvider = self
 
             self.pendingCalls[call.callbackId] = call
-            self.callbackIdsByController[ObjectIdentifier(controller)] = call.callbackId
+            let controllerId = ObjectIdentifier(controller)
+            self.callbackIdsByController[controllerId] = call.callbackId
+            self.pendingControllers[controllerId] = controller
             controller.performRequests()
         }
     }
@@ -96,7 +99,10 @@ public class DoryNativePlugin: CAPPlugin, CAPBridgedPlugin,
     }
 
     private func takePendingCall(for controller: ASAuthorizationController) -> CAPPluginCall? {
-        guard let callbackId = callbackIdsByController.removeValue(forKey: ObjectIdentifier(controller)) else {
+        let controllerId = ObjectIdentifier(controller)
+        pendingControllers.removeValue(forKey: controllerId)
+
+        guard let callbackId = callbackIdsByController.removeValue(forKey: controllerId) else {
             return nil
         }
 

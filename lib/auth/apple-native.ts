@@ -46,6 +46,16 @@ export function profileUsernameForAppleUser(userId: string): string {
   return `apple_${userId.replaceAll("-", "").toLowerCase()}`;
 }
 
+export function profileInsertForAppleUser(userId: string): {
+  id: string;
+  username: string;
+} {
+  return {
+    id: userId,
+    username: profileUsernameForAppleUser(userId),
+  };
+}
+
 export function isNativeAppleAvailable(): boolean {
   return Capacitor.isNativePlatform() && Capacitor.getPlatform() === "ios";
 }

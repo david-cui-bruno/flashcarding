@@ -4,6 +4,7 @@ import { useActionState } from "react";
 import Link from "next/link";
 import { login } from "../actions";
 import type { AuthState } from "@/lib/auth/types";
+import { AppleSignInButton } from "@/components/auth/apple-sign-in-button";
 
 export default function LoginPage() {
   const [state, action, pending] = useActionState<AuthState, FormData>(login, null);
@@ -58,6 +59,8 @@ export default function LoginPage() {
         >
           {pending ? "Logging in…" : "Log in"}
         </button>
+
+        <AppleSignInButton />
 
         <p className="pt-1 text-center text-sm">
           New here?{" "}

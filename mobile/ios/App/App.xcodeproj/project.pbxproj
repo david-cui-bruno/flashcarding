@@ -17,6 +17,7 @@
 		50B271D11FEDC1A000F3C39B /* public in Resources */ = {isa = PBXBuildFile; fileRef = 50B271D01FEDC1A000F3C39B /* public */; };
 		9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9582B6822FE993A50072D4E8 /* SceneDelegate.swift */; };
 		A11000012FE993A70072D4E8 /* DoryNativePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11000022FE993A70072D4E8 /* DoryNativePlugin.swift */; };
+		A11000042FE993A70072D4E8 /* DoryBridgeViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11000052FE993A70072D4E8 /* DoryBridgeViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		958DCC722DB07C7200EA8C5F /* debug.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = debug.xcconfig; path = ../debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		A11000022FE993A70072D4E8 /* DoryNativePlugin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoryNativePlugin.swift; sourceTree = "<group>"; };
 		A11000032FE993A70072D4E8 /* App.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = App.entitlements; sourceTree = "<group>"; };
+		A11000052FE993A70072D4E8 /* DoryBridgeViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoryBridgeViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -67,6 +69,7 @@
 		504EC3061FED79650016851F /* App */ = {
 			isa = PBXGroup;
 			children = (
+				A11000052FE993A70072D4E8 /* DoryBridgeViewController.swift */,
 				A11000022FE993A70072D4E8 /* DoryNativePlugin.swift */,
 				A11000032FE993A70072D4E8 /* App.entitlements */,
 				9582B6822FE993A50072D4E8 /* SceneDelegate.swift */,
@@ -163,6 +166,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A11000042FE993A70072D4E8 /* DoryBridgeViewController.swift in Sources */,
 				A11000012FE993A70072D4E8 /* DoryNativePlugin.swift in Sources */,
 				504EC3081FED79650016851F /* AppDelegate.swift in Sources */,
 				9582B6832FE993A70072D4E8 /* SceneDelegate.swift in Sources */,
