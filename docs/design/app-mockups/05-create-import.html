@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory App Mockups — 5. Create &amp; Import</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="pagebar">
+  <span class="title">Dory iOS Mockups</span>
+  <span class="spacer"></span>
+  <a href="01-welcome-login.html">1 Welcome</a>
+  <a href="02-onboarding.html">2 Onboarding</a>
+  <a href="03-decks-home.html">3 Decks</a>
+  <a href="04-study.html">4 Study</a>
+  <a href="05-create-import.html">5 Create</a>
+  <a href="06-profile-paywall.html">6 Pro</a>
+</div>
+
+<div class="lede">
+  <h1>5 · Create &amp; Import</h1>
+  The center + button opens a sheet: paste text, upload a document, or import Anki.
+  Generation runs async with a progress state, then cards land in triage for a
+  quick keep/edit/toss pass. This is the AI wedge — and the Pro feature.
+</div>
+
+<div class="frames">
+
+  <!-- ============ CREATE SHEET ============ -->
+  <div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="icons">▮▮▮ ᯤ ▐▊</span></div>
+      <div class="screen" style="background:rgba(15,23,42,.42);">
+        <!-- dimmed decks behind -->
+        <div style="flex:1;"></div>
+        <!-- sheet -->
+        <div style="flex:none; background:var(--bg); border-radius:24px 24px 0 0; padding:10px 20px 46px; box-shadow:0 -10px 40px rgba(15,23,42,.25);">
+          <div style="width:40px; height:5px; border-radius:3px; background:#cbd5e1; margin:0 auto 16px;"></div>
+          <div style="font-size:22px; font-weight:800; letter-spacing:-.01em; margin-bottom:16px;">New cards</div>
+
+          <div style="display:flex; flex-direction:column; gap:10px;">
+            <div class="card" style="padding:16px; display:flex; gap:14px; align-items:center; border-color:var(--cerulean);">
+              <div style="width:46px; height:46px; border-radius:13px; background:var(--cerulean-soft); display:flex; align-items:center; justify-content:center; font-size:22px;">✍️</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:16px;">Paste text <span class="chip" style="background:var(--cerulean-soft); color:var(--cerulean); margin-left:4px;">PRO</span></div>
+                <div style="font-size:13px; color:var(--muted); margin-top:2px;">Notes, articles, anything — AI writes the cards</div>
+              </div>
+              <div style="color:var(--faint); font-size:20px;">›</div>
+            </div>
+
+            <div class="card" style="padding:16px; display:flex; gap:14px; align-items:center;">
+              <div style="width:46px; height:46px; border-radius:13px; background:#fef3c7; display:flex; align-items:center; justify-content:center; font-size:22px;">📄</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:16px;">Upload a document <span class="chip" style="background:var(--cerulean-soft); color:var(--cerulean); margin-left:4px;">PRO</span></div>
+                <div style="font-size:13px; color:var(--muted); margin-top:2px;">PDF, Word, Markdown · up to 50 pages</div>
+              </div>
+              <div style="color:var(--faint); font-size:20px;">›</div>
+            </div>
+
+            <div class="card" style="padding:16px; display:flex; gap:14px; align-items:center;">
+              <div style="width:46px; height:46px; border-radius:13px; background:#e0e7ff; display:flex; align-items:center; justify-content:center; font-size:22px;">📦</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:16px;">Import from Anki <span class="chip" style="background:#dcfce7; color:#16a34a; margin-left:4px;">FREE</span></div>
+                <div style="font-size:13px; color:var(--muted); margin-top:2px;">.apkg with decks, media &amp; history</div>
+              </div>
+              <div style="color:var(--faint); font-size:20px;">›</div>
+            </div>
+
+            <div class="card" style="padding:16px; display:flex; gap:14px; align-items:center;">
+              <div style="width:46px; height:46px; border-radius:13px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; font-size:22px;">➕</div>
+              <div style="flex:1;">
+                <div style="font-weight:700; font-size:16px;">Write one card <span class="chip" style="background:#dcfce7; color:#16a34a; margin-left:4px;">FREE</span></div>
+                <div style="font-size:13px; color:var(--muted); margin-top:2px;">Classic front / back, by hand</div>
+              </div>
+              <div style="color:var(--faint); font-size:20px;">›</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="frame-label">Create sheet (center +)</div>
+  </div>
+
+  <!-- ============ GENERATING ============ -->
+  <div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="icons">▮▮▮ ᯤ ▐▊</span></div>
+      <div class="screen">
+        <div class="navbar" style="padding-top:10px;">
+          <div class="navbtn">‹</div>
+          <div style="font-size:17px; font-weight:700;">Generating</div>
+          <div style="width:34px;"></div>
+        </div>
+
+        <div style="flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 30px; gap:24px;">
+          <!-- swimming fish loader -->
+          <div style="position:relative; width:160px; height:80px;">
+            <svg width="80" height="80" viewBox="0 0 120 120" fill="none" style="position:absolute; left:40px; top:0;">
+              <path d="M28 60c10-18 28-26 46-22 12 3 20 10 24 22-4 12-12 19-24 22-18 4-36-4-46-22z" fill="#0284c7"/>
+              <path d="M98 60l14-12v24l-14-12z" fill="#0ea5e9"/>
+              <circle cx="44" cy="55" r="4.5" fill="#fff"/>
+            </svg>
+            <div style="position:absolute; left:12px; top:56px; width:8px; height:8px; border-radius:50%; background:#bae6fd;"></div>
+            <div style="position:absolute; left:0px; top:38px; width:12px; height:12px; border-radius:50%; background:#e0f2fe;"></div>
+          </div>
+          <div style="text-align:center;">
+            <div style="font-size:24px; font-weight:800; letter-spacing:-.01em;">Reading your notes…</div>
+            <div style="font-size:15px; color:var(--muted); margin-top:8px; line-height:1.5;">
+              Drafting atomic cards, grounding every fact in your source, and
+              filtering out the fluff.
+            </div>
+          </div>
+          <div style="width:100%;">
+            <div style="height:8px; background:#eef2f7; border-radius:4px; overflow:hidden;">
+              <div style="width:64%; height:100%; background:linear-gradient(90deg,#0284c7,#0ea5e9); border-radius:4px;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:13px; color:var(--faint); margin-top:8px;">
+              <span>Biochem_Lecture_12.pdf</span><span>18 cards so far</span>
+            </div>
+          </div>
+          <div class="card" style="width:100%; padding:13px 16px; font-size:13px; color:var(--muted); line-height:1.45;">
+            💡 You can leave — we'll send a notification when your cards are ready.
+          </div>
+        </div>
+        <div style="height:40px; flex:none;"></div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="frame-label">AI generation in progress</div>
+  </div>
+
+  <!-- ============ TRIAGE ============ -->
+  <div>
+    <div class="phone">
+      <div class="island"></div>
+      <div class="statusbar"><span>9:41</span><span class="icons">▮▮▮ ᯤ ▐▊</span></div>
+      <div class="screen">
+        <div class="navbar" style="padding-top:10px;">
+          <div class="navbtn">‹</div>
+          <div style="font-size:17px; font-weight:700;">Review new cards</div>
+          <div style="font-size:14px; font-weight:700; color:var(--cerulean);">Keep all</div>
+        </div>
+        <div style="padding:0 20px 8px; font-size:13px; color:var(--faint);">22 generated · 3 reviewed</div>
+
+        <div style="flex:1; overflow:hidden; padding:4px 20px 0; display:flex; flex-direction:column; gap:10px;">
+          <div class="card" style="padding:16px; border-color:var(--cerulean); box-shadow:0 6px 20px rgba(2,132,199,.12);">
+            <div style="font-size:12px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.06em;">Front</div>
+            <div style="font-size:16px; font-weight:700; margin-top:4px; line-height:1.4;">What is the committed step of glycolysis?</div>
+            <div style="font-size:12px; font-weight:700; color:var(--faint); text-transform:uppercase; letter-spacing:.06em; margin-top:12px;">Back</div>
+            <div style="font-size:15px; margin-top:4px; line-height:1.45; color:var(--ink);">The PFK‑1 reaction — F6P → F1,6BP. Irreversible and committed to glycolysis.</div>
+            <div style="display:flex; align-items:center; gap:6px; margin-top:12px; font-size:12px; color:var(--faint);">
+              <span style="color:#16a34a;">✓ grounded</span><span class="dot"></span><span>from p. 4, ¶2</span>
+            </div>
+            <div style="display:flex; gap:8px; margin-top:14px;">
+              <div style="flex:1; text-align:center; background:#fef2f2; color:var(--again); border-radius:11px; padding:11px 0; font-weight:700; font-size:14px;">Toss</div>
+              <div style="flex:1; text-align:center; background:#eef2f7; color:var(--ink); border-radius:11px; padding:11px 0; font-weight:700; font-size:14px;">Edit</div>
+              <div style="flex:2; text-align:center; background:var(--cerulean); color:#fff; border-radius:11px; padding:11px 0; font-weight:700; font-size:14px;">Keep</div>
+            </div>
+          </div>
+
+          <div class="card" style="padding:14px 16px; opacity:.55;">
+            <div style="font-size:14px; font-weight:600; line-height:1.4;">Which allosteric effectors inhibit PFK‑1?</div>
+            <div style="font-size:12px; color:var(--faint); margin-top:4px;">Up next</div>
+          </div>
+          <div class="card" style="padding:14px 16px; opacity:.35;">
+            <div style="font-size:14px; font-weight:600; line-height:1.4;">What does the citrate signal indicate to glycolysis?</div>
+          </div>
+        </div>
+
+        <div style="flex:none; padding:10px 20px 34px;">
+          <div class="card" style="padding:11px 14px; display:flex; align-items:center; gap:9px; font-size:12.5px; color:var(--muted); line-height:1.4;">
+            <span style="font-size:16px;">🎯</span> Your edit rate is 9% — Dory now spot-checks instead of asking about every card.
+          </div>
+        </div>
+      </div>
+      <div class="home-indicator"></div>
+    </div>
+    <div class="frame-label">Triage — keep / edit / toss</div>
+  </div>
+
+</div>
+</body>
+</html>

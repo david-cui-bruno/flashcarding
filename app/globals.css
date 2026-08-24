@@ -166,4 +166,29 @@
   .tabular-nums {
     font-variant-numeric: tabular-nums;
   }
+
+  /* ---- Native shell (Capacitor) app-mode ----
+     .native-app is set on <html> by app/_pwa/native-class.tsx when running in
+     the iOS/Android shell. The shell uses contentInset:never, so the webview is
+     edge-to-edge and the web layer owns the safe areas. */
+  .native-app body {
+    /* keep content out of the Dynamic Island / home indicator by default */
+    padding-top: env(safe-area-inset-top);
+    /* no default bottom padding: the mobile tab bar already pads with
+       env(safe-area-inset-bottom); focus routes go truly full-bleed */
+  }
+  .native-app {
+    /* rubber-band overscroll reveals body background, not white */
+    background: var(--background);
+    /* iOS-native feel: no text selection or callouts on chrome taps */
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+  .native-app input,
+  .native-app textarea,
+  .native-app [contenteditable] {
+    -webkit-user-select: text;
+    user-select: text;
+  }
 }

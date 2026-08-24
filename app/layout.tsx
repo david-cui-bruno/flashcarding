@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ServiceWorkerRegistrar } from "./_pwa/service-worker-registrar";
+import { NativeClass } from "./_pwa/native-class";
 
 // Typeface is the system UI font (set in globals.css via --font-sans) — native on
 // every OS, no webfont to load. Next auto-injects <link rel="manifest"> from app/manifest.ts; appleWebApp +
@@ -40,6 +41,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col">
         {children}
         <ServiceWorkerRegistrar />
+        <NativeClass />
       </body>
     </html>
   );
