@@ -11,12 +11,23 @@ import { Logo } from "@/components/logo";
 import { ProPlans } from "@/components/billing/revenuecat-provider";
 import { logout } from "@/app/(auth)/actions";
 import {
+  saveNativePushTokenAction,
   savePushSubscriptionAction,
+  removeNativePushTokenAction,
   removePushSubscriptionAction,
   saveReminderPrefsAction,
   sendTestNotificationAction,
 } from "./actions";
 import type { ReminderPrefs, StoredPushSubscription } from "@/lib/push/types";
+import {
+  installNativeNotificationActionListener,
+  isNativeIOS,
+  pushUiMode,
+  registerNativePush,
+  unregisterNativePush,
+} from "@/lib/push/native-client";
+
+const NATIVE_PUSH_TOKEN_KEY = "dory.nativePushToken";
 
 function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
@@ -39,7 +50,10 @@ function serialize(sub: PushSubscription): StoredPushSubscription {
 type ClientEnv = {
   supported: boolean;
   isIOS: boolean;
+  isNativeIOS: boolean;
   isStandalone: boolean;
+  needsInstallOnIOS: boolean;
+  showInstall: boolean;
   permission: NotificationPermission | null;
   tz: string;
 };
@@ -50,7 +64,8 @@ type Props = {
   initialPrefs: ReminderPrefs;
   initialSubscriptionCount: number;
   vapidPublicKey: string;
-  pushConfigured: boolean;
+  webPushConfigured: boolean;
+  nativePushConfigured: boolean;
   username: string;
   email: string;
 };
@@ -59,7 +74,8 @@ export function SettingsClient({
   initialPrefs,
   initialSubscriptionCount,
   vapidPublicKey,
-  pushConfigured,
+  webPushConfigured,
+  nativePushConfigured,
   username,
   email,
 }: Props) {
@@ -73,21 +89,35 @@ export function SettingsClient({
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
 
   useEffect(() => {
-    const supported =
+    const nativeIOS = isNativeIOS();
+    const browserSupported =
       "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    const mode = pushUiMode({
+      isNativeIOS: nativeIOS,
+      browserSupported,
+      isIOSBrowser: isIOS,
+      isStandalone,
+    });
     const env: ClientEnv = {
-      supported,
-      isIOS: /iPad|iPhone|iPod/.test(navigator.userAgent),
-      isStandalone:
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true,
-      permission: supported ? Notification.permission : null,
+      supported: mode.supported,
+      isIOS,
+      isNativeIOS: nativeIOS,
+      isStandalone,
+      needsInstallOnIOS: mode.needsInstallOnIOS,
+      showInstall: mode.showInstall,
+      permission: browserSupported ? Notification.permission : null,
       tz: Intl.DateTimeFormat().resolvedOptions().timeZone || initialPrefs.tz,
     };
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setClient(env);
 
-    if (supported) {
+    if (nativeIOS) {
+      void installNativeNotificationActionListener();
+    } else if (browserSupported) {
       navigator.serviceWorker.ready
         .then((reg) => reg.pushManager.getSubscription())
         .then((sub) => setSubscribed(Boolean(sub)))
@@ -124,6 +154,21 @@ export function SettingsClient({
     setBusy(true);
     setPushMsg(null);
     try {
+      if (client?.isNativeIOS) {
+        const registration = await registerNativePush();
+        await saveNativePushTokenAction(
+          registration.token,
+          registration.environment,
+        );
+        localStorage.setItem(NATIVE_PUSH_TOKEN_KEY, registration.token);
+        setSubscribed(true);
+        setClient((prev) =>
+          prev ? { ...prev, permission: "granted" } : prev,
+        );
+        setPushMsg("This iPhone will now receive reminders.");
+        return;
+      }
+
       const perm = await Notification.requestPermission();
       setClient((prev) => (prev ? { ...prev, permission: perm } : prev));
       if (perm !== "granted") {
@@ -149,6 +194,19 @@ export function SettingsClient({
     setBusy(true);
     setPushMsg(null);
     try {
+      if (client?.isNativeIOS) {
+        let token = localStorage.getItem(NATIVE_PUSH_TOKEN_KEY);
+        if (!token) {
+          token = (await registerNativePush()).token;
+        }
+        await removeNativePushTokenAction(token);
+        await unregisterNativePush();
+        localStorage.removeItem(NATIVE_PUSH_TOKEN_KEY);
+        setSubscribed(false);
+        setPushMsg("This iPhone will no longer receive reminders.");
+        return;
+      }
+
       const reg = await navigator.serviceWorker.ready;
       const sub = await reg.pushManager.getSubscription();
       if (sub) {
@@ -185,8 +243,18 @@ export function SettingsClient({
     return <div className="px-4 py-6 md:p-10" />;
   }
 
-  const { supported, isIOS, isStandalone, permission, tz } = client;
-  const needsInstallOnIOS = isIOS && !isStandalone;
+  const {
+    supported,
+    isIOS,
+    isNativeIOS: nativeIOS,
+    needsInstallOnIOS,
+    showInstall,
+    permission,
+    tz,
+  } = client;
+  const pushConfigured = nativeIOS
+    ? nativePushConfigured
+    : webPushConfigured;
 
   return (
     <div className="px-4 py-6 md:p-10">
@@ -260,12 +328,12 @@ export function SettingsClient({
                         <Button variant="ghost" size="sm" onClick={sendTest} disabled={busy || !subscribed}>
                           Send a test
                         </Button>
-                        {permission === "denied" && (
+                        {!nativeIOS && permission === "denied" && (
                           <span className="text-sm text-destructive">Blocked in your browser.</span>
                         )}
                       </div>
                     )}
-                    {!supported && pushConfigured && (
+                    {!nativeIOS && !supported && pushConfigured && (
                       <p className="text-sm text-muted-foreground">
                         This browser doesn&rsquo;t support push notifications.
                       </p>
@@ -282,7 +350,7 @@ export function SettingsClient({
           </section>
 
           {/* Install Dory (PWA) */}
-          {!isStandalone && (
+          {showInstall && (
             <section>
               <h2 className="mb-3 text-sm font-semibold">Install Dory</h2>
               <div className="rounded-xl border border-border bg-card px-5 py-5">

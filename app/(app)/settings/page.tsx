@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { getReminderState } from "@/lib/push/store";
 import { isPushConfigured } from "@/lib/push/web-push";
+import { isApnsConfigured } from "@/lib/push/apns";
 import { DEFAULT_REMINDER } from "@/lib/push/types";
 import { SettingsClient } from "./settings-client";
 
@@ -20,7 +21,8 @@ export default async function SettingsPage() {
       initialPrefs={state?.prefs ?? DEFAULT_REMINDER}
       initialSubscriptionCount={state?.subscriptionCount ?? 0}
       vapidPublicKey={vapidPublicKey}
-      pushConfigured={isPushConfigured()}
+      webPushConfigured={isPushConfigured()}
+      nativePushConfigured={isApnsConfigured()}
       username={(user?.user_metadata?.username as string | undefined) ?? "you"}
       email={user?.email ?? ""}
     />

@@ -10,8 +10,31 @@
 // `push_subscriptions`. We query only profiles with reminders enabled (not every auth
 // user). The service-role admin client bypasses RLS so it can read across users.
 import { createAdminClient } from "@/lib/supabase/admin";
-import { sendPush } from "./web-push";
+import { sendPush, type PushPayload } from "./web-push";
+import { sendApns } from "./apns";
 import { subscriptionFromRow } from "./types";
+import type {
+  ApnsEnvironment,
+  PushDeliveryResult,
+} from "./native-types";
+
+export function shouldMarkReminderSent(
+  results: PushDeliveryResult[],
+): boolean {
+  return results.includes("sent");
+}
+
+export function reminderPayload(due: number): PushPayload {
+  return {
+    title: "Dory",
+    body:
+      due === 1
+        ? "1 card is due. Time to study."
+        : `${due} cards are due. Time to study.`,
+    url: "/library",
+    tag: "carding-reminder",
+  };
+}
 
 // Local "YYYY-MM-DD" and "HH:MM" for an instant in a given IANA timezone.
 function localParts(now: Date, tz: string): { date: string; time: string } {
@@ -98,12 +121,19 @@ export async function runReminders(now: Date): Promise<ReminderRunSummary> {
       continue;
     }
 
-    const { data: subRows } = await admin
-      .from("push_subscriptions")
-      .select("endpoint, p256dh, auth_key, expiration_time")
-      .eq("user_id", prof.id);
+    const [{ data: subRows }, { data: nativeRows }] = await Promise.all([
+      admin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth_key, expiration_time")
+        .eq("user_id", prof.id),
+      admin
+        .from("native_push_tokens")
+        .select("token, environment")
+        .eq("user_id", prof.id),
+    ]);
     const subs = subRows ?? [];
-    if (subs.length === 0) {
+    const nativeTokens = nativeRows ?? [];
+    if (subs.length === 0 && nativeTokens.length === 0) {
       summary.skipped++;
       continue;
     }
@@ -115,27 +145,48 @@ export async function runReminders(now: Date): Promise<ReminderRunSummary> {
       continue;
     }
 
-    const payload = {
-      title: "Dory",
-      body: due === 1 ? "1 card is due. Time to study." : `${due} cards are due. Time to study.`,
-      url: "/study",
-      tag: "carding-reminder",
-    };
+    const payload = reminderPayload(due);
 
-    const expired: string[] = [];
+    const results: PushDeliveryResult[] = [];
+    const expiredWeb: string[] = [];
+    const expiredNative: string[] = [];
     for (const row of subs) {
       const result = await sendPush(subscriptionFromRow(row), payload);
+      results.push(result);
       if (result === "sent") summary.pushesSent++;
-      else if (result === "expired") expired.push(row.endpoint);
+      else if (result === "expired") expiredWeb.push(row.endpoint);
+    }
+    for (const row of nativeTokens) {
+      const result = await sendApns(
+        row.token,
+        row.environment as ApnsEnvironment,
+        payload,
+      );
+      results.push(result);
+      if (result === "sent") summary.pushesSent++;
+      else if (result === "expired") expiredNative.push(row.token);
     }
 
-    if (expired.length) {
+    if (expiredWeb.length) {
       await admin
         .from("push_subscriptions")
         .delete()
         .eq("user_id", prof.id)
-        .in("endpoint", expired);
-      summary.pruned += expired.length;
+        .in("endpoint", expiredWeb);
+      summary.pruned += expiredWeb.length;
+    }
+    if (expiredNative.length) {
+      await admin
+        .from("native_push_tokens")
+        .delete()
+        .eq("user_id", prof.id)
+        .in("token", expiredNative);
+      summary.pruned += expiredNative.length;
+    }
+
+    if (!shouldMarkReminderSent(results)) {
+      summary.skipped++;
+      continue;
     }
 
     // Mark reminded-today so it doesn't fire again until tomorrow.

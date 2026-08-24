@@ -10,12 +10,21 @@ public class DoryNativePlugin: CAPPlugin, CAPBridgedPlugin,
     public let identifier = "DoryNativePlugin"
     public let jsName = "DoryNative"
     public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "signInWithApple", returnType: CAPPluginReturnPromise)
+        CAPPluginMethod(name: "signInWithApple", returnType: CAPPluginReturnPromise),
+        CAPPluginMethod(name: "getBuildEnvironment", returnType: CAPPluginReturnPromise)
     ]
 
     private var pendingCalls: [String: CAPPluginCall] = [:]
     private var callbackIdsByController: [ObjectIdentifier: String] = [:]
     private var pendingControllers: [ObjectIdentifier: ASAuthorizationController] = [:]
+
+    @objc public func getBuildEnvironment(_ call: CAPPluginCall) {
+        #if DEBUG
+        call.resolve(["environment": "development"])
+        #else
+        call.resolve(["environment": "production"])
+        #endif
+    }
 
     @objc public func signInWithApple(_ call: CAPPluginCall) {
         DispatchQueue.main.async { [weak self] in

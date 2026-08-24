@@ -32,6 +32,12 @@ function encodeJson(value: unknown): string {
   return Buffer.from(JSON.stringify(value)).toString("base64url");
 }
 
+export function isApnsConfigured(): boolean {
+  return ["APNS_AUTH_KEY", "APNS_KEY_ID", "APPLE_TEAM_ID"].every(
+    (name) => Boolean(process.env[name]?.trim()),
+  );
+}
+
 export function apnsHost(environment: ApnsEnvironment): string {
   return environment === "development"
     ? "api.sandbox.push.apple.com"
@@ -133,7 +139,12 @@ export async function sendApns(
   environment: ApnsEnvironment,
   payload: NativePushPayload,
 ): Promise<PushDeliveryResult> {
-  const providerToken = createApnsProviderToken();
+  let providerToken: string;
+  try {
+    providerToken = createApnsProviderToken();
+  } catch {
+    return "error";
+  }
   const topic = process.env.APNS_TOPIC?.trim() || "com.learndory.app";
 
   return new Promise((resolve) => {

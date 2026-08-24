@@ -24,6 +24,8 @@ export type ReminderPrefs = {
 // Only the username lives in Auth user_metadata now (set at signup, used by the layout).
 export type DoryUserMetadata = {
   username?: string;
+  given_name?: string;
+  family_name?: string;
 };
 
 export const DEFAULT_REMINDER: ReminderPrefs = {
@@ -33,6 +35,7 @@ export const DEFAULT_REMINDER: ReminderPrefs = {
 };
 
 export type PushSubscriptionRow = Database["public"]["Tables"]["push_subscriptions"]["Row"];
+export type NativePushTokenRow = Database["public"]["Tables"]["native_push_tokens"]["Row"];
 
 /** Map a push_subscriptions row to the web-push subscription shape. */
 export function subscriptionFromRow(

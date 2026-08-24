@@ -10,6 +10,9 @@ export type NativeAppleCredential = {
 
 type DoryNativePlugin = {
   signInWithApple(options: { nonce: string }): Promise<NativeAppleCredential>;
+  getBuildEnvironment(): Promise<{
+    environment: "development" | "production";
+  }>;
 };
 
 const DoryNative = registerPlugin<DoryNativePlugin>("DoryNative");
@@ -70,4 +73,10 @@ export async function signInWithNativeApple(): Promise<{
   });
 
   return { credential, rawNonce };
+}
+
+export async function getNativeBuildEnvironment(): Promise<{
+  environment: "development" | "production";
+}> {
+  return DoryNative.getBuildEnvironment();
 }
