@@ -3,8 +3,13 @@
   "appName": "Dory",
   "webDir": "www",
   "server": {
-    "url": "https://cardstock-framewise-health.vercel.app",
-    "allowNavigation": ["cardstock-framewise-health.vercel.app"]
+    "url": "https://learndory.com",
+    "allowNavigation": ["learndory.com", "www.learndory.com"]
   },
-  "ios": { "contentInset": "always" }
+  "ios": { "contentInset": "always" },
+  "plugins": {
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "banner", "list"]
+    }
+  }
 }
