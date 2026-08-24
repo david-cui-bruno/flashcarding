@@ -6,5 +6,5 @@
     "url": "https://cardstock-framewise-health.vercel.app",
     "allowNavigation": ["cardstock-framewise-health.vercel.app"]
   },
-  "ios": { "contentInset": "always" }
+  "ios": { "contentInset": "never" }
 }
