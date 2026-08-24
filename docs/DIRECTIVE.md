@@ -22,13 +22,19 @@ $29.99/yr): AI card generation. Do not drift from the card-quality thesis
 | Privacy/support | Live: learndory.com/privacy, learndory.com/support |
 | Haptics | Shipped (Capacitor Haptics + Vibration fallback) |
 | Reminder cron | GitHub Actions hourly (`.github/workflows/reminder-cron.yml`, CRON_SECRET secret) |
-| Apple Developer | Owner HAS an account. Nothing created in App Store Connect yet |
+| Apple Developer | Owner HAS an account. App Store Connect record + TestFlight build EXIST (owner invited testers 2026-08-24) |
+| iOS mockups | `docs/design/app-mockups/` — 6 pages; owner reviewing direction (feels-like-website feedback led to native app-mode plan) |
+| App-mode foundation | Shipped: `lib/native.ts`, `native-app` html class, edge-to-edge shell (contentInset never) |
+| Billing webhook | `/api/billing/*` exempted from session proxy (was 307-blocked); returns 401 without secret |
 | Domain email | NOT set up: add Namecheap forward support@learndory.com → owner inbox |
 
 ## Remaining work, in order
 
-1. **App Store Connect setup** (owner + agent together, ~1 hr)
-   - Create app record for `com.learndory.app`, name "Dory — AI Flashcards"
+0. **App-mode UI** (BLOCKED on owner approving `docs/design/app-mockups/` direction)
+   - Native tab bar (Decks / Stats / + / Review / Profile), welcome+onboarding
+     flow, study screens per mockups — rendered by the web app under the
+     `.native-app` class, served to the shell
+1. **App Store Connect subscriptions** (app record + TestFlight already exist)
    - Create auto-renewable subscription group "Dory Pro": $3.99/mo + $29.99/yr
    - Enroll in the Small Business Program (15% cut)
 2. **RevenueCat wiring**
