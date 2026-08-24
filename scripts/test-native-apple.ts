@@ -59,6 +59,15 @@ async function main() {
   );
   assert.match(entitlements, /com\.apple\.developer\.applesignin/);
 
+  const infoPlist = readFileSync(
+    resolve("mobile/ios/App/App/Info.plist"),
+    "utf8",
+  );
+  assert.match(
+    infoPlist,
+    /<key>ITSAppUsesNonExemptEncryption<\/key>\s*<false\/>/,
+  );
+
   const xcodeProject = readFileSync(
     resolve("mobile/ios/App/App.xcodeproj/project.pbxproj"),
     "utf8",
