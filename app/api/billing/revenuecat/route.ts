@@ -1,27 +1,16 @@
 import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  subscriptionUpdateForEvent,
+  type RevenueCatSubscriptionEvent,
+} from "@/lib/billing/revenuecat-webhook";
 
 const SECRET_HEADER = "x-revenuecat-signature";
 
 type RevenueCatEvent = {
-  event?: {
+  event?: RevenueCatSubscriptionEvent & {
     app_user_id?: string;
-    type?: string;
-    expiration_at_ms?: number | null;
-    entitlement_ids?: string[];
   };
 };
-
-function isProEvent(event: NonNullable<RevenueCatEvent["event"]>) {
-  return event.entitlement_ids?.includes("pro") ?? true;
-}
-
-function planFor(event: NonNullable<RevenueCatEvent["event"]>) {
-  if (["EXPIRATION", "CANCELLATION", "BILLING_ISSUE"].includes(event.type ?? "")) {
-    return { plan: "free", plan_expires_at: null, plan_source: "revenuecat" } as const;
-  }
-  const expires = event.expiration_at_ms ? new Date(event.expiration_at_ms).toISOString() : null;
-  return { plan: "pro", plan_expires_at: expires, plan_source: "revenuecat" } as const;
-}
 
 // RevenueCat wiring later:
 // 1. Set REVENUECAT_WEBHOOK_SECRET in Vercel and RevenueCat's webhook config.
@@ -44,11 +33,12 @@ export async function POST(request: Request) {
 
   const event = payload.event;
   if (!event?.app_user_id) return Response.json({ error: "Missing app_user_id." }, { status: 400 });
-  if (!isProEvent(event)) return Response.json({ ok: true, ignored: true });
+  const update = subscriptionUpdateForEvent(event);
+  if (!update) return Response.json({ ok: true, ignored: true });
 
   const { error } = await createAdminClient()
     .from("profiles")
-    .update(planFor(event))
+    .update(update)
     .eq("id", event.app_user_id);
 
   if (error) return Response.json({ error: error.message }, { status: 500 });

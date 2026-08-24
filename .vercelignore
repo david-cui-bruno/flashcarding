@@ -4,3 +4,7 @@ desktop/
 assets/
 .context/
 services/
+node_modules/
+.next/
+mobile/node_modules/
+mobile/ios/App/build/

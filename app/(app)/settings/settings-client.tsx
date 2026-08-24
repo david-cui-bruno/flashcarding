@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Logo } from "@/components/logo";
+import { ProPlans } from "@/components/billing/revenuecat-provider";
 import { logout } from "@/app/(auth)/actions";
 import {
   savePushSubscriptionAction,
@@ -196,6 +197,11 @@ export function SettingsClient({
         </div>
 
         <div className="space-y-8">
+          <section>
+            <h2 className="mb-3 text-sm font-semibold">Plan</h2>
+            <ProPlans />
+          </section>
+
           {/* Daily study reminders */}
           <section>
             <h2 className="mb-3 text-sm font-semibold">Daily study reminders</h2>
