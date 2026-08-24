@@ -1,12 +1,15 @@
 "use server";
 
 import {
+  addNativePushToken,
   addPushSubscription,
+  removeNativePushToken,
   removePushSubscription,
   saveReminderPrefs,
   sendToCurrentUser,
 } from "@/lib/push/store";
 import type { StoredPushSubscription } from "@/lib/push/types";
+import type { ApnsEnvironment } from "@/lib/push/native-types";
 
 export async function savePushSubscriptionAction(sub: StoredPushSubscription) {
   await addPushSubscription(sub);
@@ -15,6 +18,19 @@ export async function savePushSubscriptionAction(sub: StoredPushSubscription) {
 
 export async function removePushSubscriptionAction(endpoint: string) {
   await removePushSubscription(endpoint);
+  return { ok: true as const };
+}
+
+export async function saveNativePushTokenAction(
+  token: string,
+  environment: ApnsEnvironment,
+) {
+  await addNativePushToken(token, environment);
+  return { ok: true as const };
+}
+
+export async function removeNativePushTokenAction(token: string) {
+  await removeNativePushToken(token);
   return { ok: true as const };
 }
 
@@ -31,7 +47,7 @@ export async function sendTestNotificationAction() {
     const result = await sendToCurrentUser({
       title: "Dory",
       body: "This is a test reminder. Notifications are working 🎉",
-      url: "/study",
+      url: "/library",
       tag: "carding-test",
     });
     if (result.total === 0) {

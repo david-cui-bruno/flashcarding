@@ -3,6 +3,23 @@ import { NextResponse, type NextRequest } from "next/server";
 import { longLived } from "./cookies";
 import { getSessionClaims } from "./auth";
 
+export function isPublicPath(path: string) {
+  const isAuthRoute = path === "/login" || path === "/signup";
+
+  return (
+    isAuthRoute ||
+    path === "/" ||
+    path === "/opengraph-image" ||
+    path === "/privacy" ||
+    path === "/support" ||
+    path === "/sw.js" ||
+    path === "/manifest.webmanifest" ||
+    path === "/api/billing/revenuecat" ||
+    path.startsWith("/icons/") ||
+    path.startsWith("/api/cron/")
+  );
+}
+
 // Refreshes the Supabase session cookie on every request and gates routes:
 // unauthenticated users are sent to /login; authenticated users are kept out of
 // the auth pages and the bare root. Standard @supabase/ssr pattern, used by the
@@ -36,15 +53,8 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path === "/login" || path === "/signup";
   // Public to the proxy: PWA assets must load before sign-in (or the app isn't
-  // installable), and the reminder cron authenticates itself via CRON_SECRET.
-  const isPublic =
-    isAuthRoute ||
-    path === "/privacy" ||
-    path === "/support" ||
-    path === "/sw.js" ||
-    path === "/manifest.webmanifest" ||
-    path.startsWith("/icons/") ||
-    path.startsWith("/api/cron/");
+  // installable), while machine-to-machine endpoints authenticate themselves.
+  const isPublic = isPublicPath(path);
 
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();

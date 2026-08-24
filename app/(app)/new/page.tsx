@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Upload, Sparkles, FileText, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { ProPlans } from "@/components/billing/revenuecat-provider";
 import { generateFromText, generateFromFile } from "./actions";
 
 const MIN_TEXT = 20;
@@ -142,19 +142,9 @@ export default function NewPage() {
 
         {error && (
           proBlocked ? (
-            <Card className="mt-4 border-primary/25 bg-accent">
-              <CardContent className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <p className="font-medium">Dory Pro unlocks AI card generation</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
-                    Study and imports stay free. Upgrade when you want Dory to make cards for you.
-                  </p>
-                </div>
-                <Button asChild>
-                  <Link href="/settings">View plans</Link>
-                </Button>
-              </CardContent>
-            </Card>
+            <div className="mt-4">
+              <ProPlans compact />
+            </div>
           ) : (
             <p className="mt-3 text-sm text-destructive">{error}</p>
           )

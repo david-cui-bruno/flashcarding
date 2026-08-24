@@ -65,7 +65,7 @@ function HubChrome({
   triageCount: number;
 }) {
   return (
-    <div className="flex min-h-screen flex-col md:h-screen md:flex-row md:overflow-hidden">
+    <div className="flex min-h-screen flex-col pt-[env(safe-area-inset-top)] md:h-screen md:flex-row md:overflow-hidden md:pt-0">
       <Sidebar username={username} triageCount={triageCount} />
       <main className="flex-1 pb-24 md:h-screen md:overflow-y-auto md:pb-0">
         {children}
@@ -262,7 +262,7 @@ function Avatar({ username, className }: { username: string; className?: string 
 
 function FocusChrome({ children }: { children: ReactNode }) {
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-screen overflow-hidden pt-[env(safe-area-inset-top)] md:pt-0">
       <aside className="hidden w-[60px] flex-none flex-col items-center border-r border-border bg-card py-5 md:flex">
         <Logo size={24} className="mb-auto" />
         <Button asChild variant="ghost" size="icon" className="rounded-full" aria-label="Close">

@@ -4,6 +4,11 @@
 // `push_subscriptions` (see lib/push/types.ts).
 import { createClient } from "@/lib/supabase/server";
 import { sendPush, type PushPayload } from "./web-push";
+import { sendApns } from "./apns";
+import {
+  nativePushTokenInsert,
+  type ApnsEnvironment,
+} from "./native-types";
 import {
   DEFAULT_REMINDER,
   subscriptionFromRow,
@@ -30,7 +35,7 @@ export async function getReminderState(): Promise<ReminderState | null> {
   if (!ctx) return null;
   const { supabase, user } = ctx;
 
-  const [{ data: prof }, { count }] = await Promise.all([
+  const [{ data: prof }, { count: webCount }, { count: nativeCount }] = await Promise.all([
     supabase
       .from("profiles")
       .select("reminder_enabled, reminder_time, reminder_tz, reminder_last_sent_on")
@@ -38,6 +43,10 @@ export async function getReminderState(): Promise<ReminderState | null> {
       .single(),
     supabase
       .from("push_subscriptions")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id),
+    supabase
+      .from("native_push_tokens")
       .select("id", { count: "exact", head: true })
       .eq("user_id", user.id),
   ]);
@@ -49,7 +58,7 @@ export async function getReminderState(): Promise<ReminderState | null> {
       tz: prof?.reminder_tz ?? DEFAULT_REMINDER.tz,
       lastSentOn: prof?.reminder_last_sent_on ?? null,
     },
-    subscriptionCount: count ?? 0,
+    subscriptionCount: (webCount ?? 0) + (nativeCount ?? 0),
   };
 }
 
@@ -78,6 +87,35 @@ export async function removePushSubscription(endpoint: string) {
     .delete()
     .eq("user_id", ctx.user.id)
     .eq("endpoint", endpoint);
+  if (error) throw error;
+}
+
+export async function addNativePushToken(
+  token: string,
+  environment: ApnsEnvironment,
+): Promise<void> {
+  const ctx = await getSession();
+  if (!ctx) throw new Error("Not authenticated");
+
+  const { error } = await ctx.supabase
+    .from("native_push_tokens")
+    .upsert(nativePushTokenInsert(ctx.user.id, token, environment), {
+      onConflict: "user_id,token",
+    });
+
+  if (error) throw error;
+}
+
+export async function removeNativePushToken(token: string): Promise<void> {
+  const ctx = await getSession();
+  if (!ctx) throw new Error("Not authenticated");
+
+  const { error } = await ctx.supabase
+    .from("native_push_tokens")
+    .delete()
+    .eq("user_id", ctx.user.id)
+    .eq("token", token);
+
   if (error) throw error;
 }
 
@@ -121,25 +159,53 @@ export async function sendToCurrentUser(
 ): Promise<{ sent: number; expired: number; total: number }> {
   const ctx = await getSession();
   if (!ctx) throw new Error("Not authenticated");
-  const { data: rows } = await ctx.supabase
-    .from("push_subscriptions")
-    .select("endpoint, p256dh, auth_key, expiration_time")
-    .eq("user_id", ctx.user.id);
-  const subs = rows ?? [];
+  const [{ data: webRows }, { data: nativeRows }] = await Promise.all([
+    ctx.supabase
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth_key, expiration_time")
+      .eq("user_id", ctx.user.id),
+    ctx.supabase
+      .from("native_push_tokens")
+      .select("token, environment")
+      .eq("user_id", ctx.user.id),
+  ]);
+  const subs = webRows ?? [];
+  const nativeTokens = nativeRows ?? [];
 
   let sent = 0;
-  const expired: string[] = [];
+  const expiredWeb: string[] = [];
+  const expiredNative: string[] = [];
   for (const row of subs) {
     const result = await sendPush(subscriptionFromRow(row), payload);
     if (result === "sent") sent++;
-    else if (result === "expired") expired.push(row.endpoint);
+    else if (result === "expired") expiredWeb.push(row.endpoint);
   }
-  if (expired.length) {
+  for (const row of nativeTokens) {
+    const result = await sendApns(
+      row.token,
+      row.environment as ApnsEnvironment,
+      payload,
+    );
+    if (result === "sent") sent++;
+    else if (result === "expired") expiredNative.push(row.token);
+  }
+  if (expiredWeb.length) {
     await ctx.supabase
       .from("push_subscriptions")
       .delete()
       .eq("user_id", ctx.user.id)
-      .in("endpoint", expired);
+      .in("endpoint", expiredWeb);
   }
-  return { sent, expired: expired.length, total: subs.length };
+  if (expiredNative.length) {
+    await ctx.supabase
+      .from("native_push_tokens")
+      .delete()
+      .eq("user_id", ctx.user.id)
+      .in("token", expiredNative);
+  }
+  return {
+    sent,
+    expired: expiredWeb.length + expiredNative.length,
+    total: subs.length + nativeTokens.length,
+  };
 }

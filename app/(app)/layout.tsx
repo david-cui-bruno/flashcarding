@@ -5,6 +5,8 @@ import { getSessionClaims } from "@/lib/supabase/auth";
 import { AppShell } from "@/components/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import { OfflineSync } from "@/app/_pwa/offline-sync";
+import { getEntitlement } from "@/lib/billing/entitlements";
+import { RevenueCatProvider } from "@/components/billing/revenuecat-provider";
 
 export default async function AppLayout({ children }: { children: ReactNode }) {
   const supabase = await createClient();
@@ -16,18 +18,25 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const username = claims.user_metadata?.username ?? "you";
 
   // "To triage" badge = freshly-generated cards still pending review.
-  const { count } = await supabase
-    .from("cards")
-    .select("id", { count: "exact", head: true })
-    .eq("review_status", "pending");
+  const [{ count }, entitlement] = await Promise.all([
+    supabase
+      .from("cards")
+      .select("id", { count: "exact", head: true })
+      .eq("review_status", "pending"),
+    getEntitlement(claims.sub, supabase),
+  ]);
 
   return (
-    <>
+    <RevenueCatProvider
+      appUserID={claims.sub}
+      apiKey={process.env.NEXT_PUBLIC_REVENUECAT_APPLE_API_KEY ?? ""}
+      initialIsPro={entitlement.active}
+    >
       <AppShell username={username} triageCount={count ?? 0}>
         {children}
       </AppShell>
       <OfflineSync />
       <Toaster />
-    </>
+    </RevenueCatProvider>
   );
 }
