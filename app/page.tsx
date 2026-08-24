@@ -31,7 +31,7 @@ const features = [
 export default function Home() {
   return (
     <main className="min-h-screen overflow-hidden bg-background text-foreground">
-      <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-5 py-5 sm:px-8">
+      <header className="relative z-20 mx-auto flex max-w-6xl items-center justify-between px-5 pb-5 pt-[calc(1.25rem+env(safe-area-inset-top))] sm:px-8">
         <Link href="/" className="flex items-center gap-2.5" aria-label="Dory home">
           <Logo size={34} />
           <span className="text-lg font-semibold tracking-tight">Dory</span>
