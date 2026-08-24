@@ -1,0 +1,118 @@
+/* Dory app mockups — shared styles. Brand: cerulean + slate, iOS native feel. */
+:root {
+  --bg: #f8fafc;
+  --card: #ffffff;
+  --border: #e2e8f0;
+  --ink: #0f172a;
+  --muted: #64748b;
+  --faint: #94a3b8;
+  --cerulean: #0284c7;
+  --cerulean-bright: #0ea5e9;
+  --cerulean-soft: #e0f2fe;
+  --again: #ef4444;
+  --hard: #f59e0b;
+  --good: #22c55e;
+  --easy: #0ea5e9;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  background: #16181d;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  color: var(--ink);
+  min-height: 100vh;
+  padding: 48px 32px 80px;
+}
+/* ---------- page chrome (the dark gallery around the phones) ---------- */
+.pagebar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  display: flex; align-items: center; gap: 16px;
+  padding: 12px 20px;
+  background: rgba(22,24,29,.92); backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(255,255,255,.08);
+  color: #e2e8f0; font-size: 14px;
+}
+.pagebar a { color: #7dd3fc; text-decoration: none; font-weight: 600; }
+.pagebar a:hover { text-decoration: underline; }
+.pagebar .title { font-weight: 700; color: #fff; }
+.pagebar .spacer { flex: 1; }
+.lede { max-width: 720px; margin: 40px auto 8px; color: #cbd5e1; text-align: center; font-size: 15px; line-height: 1.6; }
+.lede h1 { color: #fff; font-size: 22px; margin-bottom: 6px; }
+.frames { display: flex; flex-wrap: wrap; gap: 40px; justify-content: center; margin-top: 36px; }
+.frame-label { text-align: center; color: #94a3b8; font-size: 13px; margin-top: 14px; font-weight: 600; letter-spacing: .02em; }
+
+/* ---------- iphone frame ---------- */
+.phone {
+  width: 393px; height: 852px;
+  background: var(--bg);
+  border-radius: 54px;
+  border: 10px solid #0b0c0f;
+  box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 2px #26282e;
+  position: relative; overflow: hidden;
+  display: flex; flex-direction: column;
+}
+.island {
+  position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+  width: 122px; height: 34px; background: #0b0c0f; border-radius: 20px; z-index: 30;
+}
+.statusbar {
+  height: 56px; flex: none;
+  display: flex; align-items: flex-end; justify-content: space-between;
+  padding: 0 30px 6px; font-size: 15px; font-weight: 600;
+}
+.statusbar .icons { display: flex; gap: 6px; align-items: center; }
+.home-indicator {
+  position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+  width: 140px; height: 5px; border-radius: 3px; background: #0f172a; opacity: .9; z-index: 30;
+}
+.screen { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* ---------- iOS components ---------- */
+.navbar {
+  padding: 6px 20px 10px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.navbar .lg { font-size: 34px; font-weight: 800; letter-spacing: -.02em; }
+.navbtn {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #eef2f7; color: var(--cerulean);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
+}
+.tabbar {
+  flex: none; height: 84px;
+  background: rgba(255,255,255,.94); backdrop-filter: blur(16px);
+  border-top: .5px solid var(--border);
+  display: flex; padding: 10px 8px 26px;
+}
+.tab { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: 10px; font-weight: 600; color: var(--faint); }
+.tab.active { color: var(--cerulean); }
+.tab svg { width: 26px; height: 26px; }
+.btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  border-radius: 14px; font-size: 17px; font-weight: 600;
+  height: 50px; width: 100%;
+}
+.btn-primary { background: var(--cerulean); color: #fff; box-shadow: 0 6px 16px rgba(2,132,199,.35); }
+.btn-apple { background: #000; color: #fff; }
+.btn-quiet { background: #eef2f7; color: var(--ink); }
+.field {
+  background: #fff; border: 1px solid var(--border); border-radius: 14px;
+  padding: 15px 16px; font-size: 17px; color: var(--ink);
+  display: flex; align-items: center;
+}
+.field .ph { color: var(--faint); }
+.card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 18px;
+  box-shadow: 0 1px 3px rgba(15,23,42,.05);
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 12px; font-weight: 700; border-radius: 999px; padding: 3px 9px;
+}
+.chip.new { background: #ecfeff; color: #0891b2; }
+.chip.learn { background: #fff7ed; color: #ea580c; }
+.chip.due { background: var(--cerulean-soft); color: var(--cerulean); }
+.dot { width: 4px; height: 4px; border-radius: 50%; background: var(--faint); }
+
+/* fish logo */
+.fish { display: inline-block; }
