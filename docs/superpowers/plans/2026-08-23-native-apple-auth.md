@@ -124,7 +124,7 @@ const nonce = createRawNonce();
 assert.match(nonce, /^[A-Za-z0-9_-]{43}$/);
 assert.equal(
   await sha256Hex("dory"),
-  "6c786a7829fe45689a65f92dce5a43c053df44f0ecad0c85042b49bb6892bec5",
+  "5cb8ad155351b80ef8385b3beabce3be352abb773ba9f4e44854c814188a0936",
 );
 assert.equal(
   profileUsernameForAppleUser("7a20f0f2-32ea-4055-9b68-58d368913c8c"),
