@@ -6,9 +6,27 @@ import { ServiceWorkerRegistrar } from "./_pwa/service-worker-registrar";
 // every OS, no webfont to load. Next auto-injects <link rel="manifest"> from app/manifest.ts; appleWebApp +
 // icons.apple add the iOS home-screen / installable-PWA meta tags.
 export const metadata: Metadata = {
+  metadataBase: new URL("https://learndory.com"),
   title: { default: "Dory", template: "%s · Dory" },
-  description: "Turn documents into high-quality flashcards and study them on a spaced schedule.",
+  description:
+    "Turn what you read into grounded flashcards, then remember it with modern spaced repetition.",
   applicationName: "Dory",
+  openGraph: {
+    type: "website",
+    url: "/",
+    siteName: "Dory",
+    title: "Dory — Remember what you read",
+    description:
+      "Turn what you read into grounded flashcards, then remember it with modern spaced repetition.",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Dory — Remember what you read",
+    description:
+      "Turn what you read into grounded flashcards, then remember it with modern spaced repetition.",
+    images: ["/opengraph-image"],
+  },
   appleWebApp: {
     capable: true,
     title: "Dory",

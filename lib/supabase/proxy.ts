@@ -8,6 +8,8 @@ export function isPublicPath(path: string) {
 
   return (
     isAuthRoute ||
+    path === "/" ||
+    path === "/opengraph-image" ||
     path === "/privacy" ||
     path === "/support" ||
     path === "/sw.js" ||
