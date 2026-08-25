@@ -28,7 +28,9 @@ $19.99/yr): AI card generation. Do not drift from the card-quality thesis
 | Billing webhook | `/api/billing/*` exempted from session proxy (was 307-blocked); returns 401 without secret |
 | Domain email | NOT set up: add Namecheap forward support@learndory.com → owner inbox |
 
-## Remaining work, in order
+## Remaining work → see docs/CRITICAL-PATH.md (canonical)
+
+## (superseded) Remaining work, in order
 
 0. **App-mode UI** (BLOCKED on owner approving `docs/design/app-mockups/` direction)
    - Native tab bar (Decks / Stats / + / Review / Profile), welcome+onboarding
