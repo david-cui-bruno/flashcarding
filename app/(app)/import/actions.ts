@@ -1,31 +1,33 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { parseQuizletExport, type ImportedCard } from "@/lib/import/quizlet";
 import { createClient } from "@/lib/supabase/server";
 
 type ImportState = { error: string } | null;
 const MAX_ROWS = 5000;
 
-// One card per line: "term <tab|comma> definition". Quizlet's default export is tab between
-// fields + newline between cards; CSV uses commas. Split on the FIRST delimiter so commas
-// inside a definition survive. Skips blank / delimiter-less / empty rows.
-function parseRows(text: string): { rows: { term: string; definition: string }[]; lineCount: number } {
-  const lines = text
-    .split(/\r?\n/)
-    .map((l) => l.trim())
-    .filter(Boolean);
-  // Pick ONE delimiter for the whole paste (Quizlet defaults to tab): tab if at least half the
-  // lines contain one — avoids a stray tab in a comma file flipping a single row's split.
-  const useTab = lines.filter((l) => l.includes("\t")).length * 2 >= lines.length;
-  const rows: { term: string; definition: string }[] = [];
-  for (const line of lines) {
-    const idx = useTab ? line.indexOf("\t") : line.indexOf(",");
-    if (idx <= 0) continue; // no delimiter, or empty term
-    const term = line.slice(0, idx).trim();
-    const definition = line.slice(idx + 1).trim();
-    if (term && definition) rows.push({ term, definition });
-  }
-  return { rows, lineCount: lines.length };
+function parseRows(text: string): { rows: ImportedCard[]; lineCount: number } {
+  const tabResult = parseQuizletExport(text, { termSeparator: "\t", rowSeparator: "\n" });
+  if (tabResult.cards.length > 0) return { rows: tabResult.cards, lineCount: tabResult.rowCount };
+
+  const commaResult = parseQuizletExport(text, { termSeparator: ",", rowSeparator: "\n" });
+  return { rows: commaResult.cards, lineCount: Math.max(tabResult.rowCount, commaResult.rowCount) };
+}
+
+function parseImport(formData: FormData): { rows: ImportedCard[]; lineCount: number; error?: string } {
+  const text = String(formData.get("text") ?? "");
+  if (String(formData.get("importMode") ?? "paste") !== "quizlet") return parseRows(text);
+
+  const termSeparator = String(formData.get("termSeparator") ?? "\t");
+  const rowSeparator = String(formData.get("rowSeparator") ?? "\n");
+  const result = parseQuizletExport(text, { termSeparator, rowSeparator });
+  const blockingIssue = result.issues.find((issue) => issue.code === "empty_input" || issue.code === "single_column");
+  return {
+    rows: result.cards,
+    lineCount: result.rowCount,
+    error: blockingIssue?.message,
+  };
 }
 
 // Direct paste/CSV import — a new card type that BYPASSES the AI pipeline (no generation,
@@ -33,10 +35,11 @@ function parseRows(text: string): { rows: { term: string; definition: string }[]
 // binary imports (Anki .apkg with media) use scripts/import-apkg.ts instead.
 export async function importPastedCards(_prev: ImportState, formData: FormData): Promise<ImportState> {
   const deckName = String(formData.get("deckName") ?? "").trim() || "Imported deck";
-  const { rows, lineCount } = parseRows(String(formData.get("text") ?? ""));
+  const { rows, lineCount, error: parseError } = parseImport(formData);
   if (lineCount > MAX_ROWS) {
     return { error: `Too many lines (${lineCount}). Paste up to ${MAX_ROWS}, or use the .apkg uploader for big decks.` };
   }
+  if (parseError) return { error: parseError };
   if (rows.length === 0) {
     return { error: "No cards found. Use one per line: term, definition (or tab-separated)." };
   }
