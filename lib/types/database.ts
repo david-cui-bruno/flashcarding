@@ -41,6 +41,8 @@ export type Database = {
     Tables: {
       cards: {
         Row: {
+          anki_note_id: number | null
+          anki_note_mod: number | null
           audio_path: string | null
           back_image_path: string | null
           collection_id: string | null
@@ -68,6 +70,8 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anki_note_id?: number | null
+          anki_note_mod?: number | null
           audio_path?: string | null
           back_image_path?: string | null
           collection_id?: string | null
@@ -95,6 +99,8 @@ export type Database = {
           user_id: string
         }
         Update: {
+          anki_note_id?: number | null
+          anki_note_mod?: number | null
           audio_path?: string | null
           back_image_path?: string | null
           collection_id?: string | null
@@ -147,6 +153,7 @@ export type Database = {
       }
       collections: {
         Row: {
+          anki_deck_id: number | null
           created_at: string
           id: string
           name: string
@@ -154,6 +161,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          anki_deck_id?: number | null
           created_at?: string
           id?: string
           name: string
@@ -161,6 +169,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          anki_deck_id?: number | null
           created_at?: string
           id?: string
           name?: string
@@ -253,6 +262,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      native_push_tokens: {
+        Row: {
+          created_at: string
+          environment: string
+          id: string
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          id?: string
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          id?: string
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {

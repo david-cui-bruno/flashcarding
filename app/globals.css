@@ -97,8 +97,11 @@
 }
 
 @theme inline {
-  /* System UI font — native on every OS (SF / Segoe / Roboto), zero load cost. */
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, ui-sans-serif, sans-serif;
+  /* Locked type system (docs/design/DECISIONS.md): Schibsted Grotesk
+     (self-hosted via next/font, --font-schibsted) with system fallbacks. */
+  --font-sans: var(--font-schibsted), system-ui, -apple-system, "Segoe UI", Roboto, ui-sans-serif, sans-serif;
+  /* Display numbers: Switzer thin (Fontshare, loaded in app/layout.tsx). */
+  --font-display: "Switzer", var(--font-schibsted), system-ui, sans-serif;
 
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -164,6 +167,14 @@
   }
   /* tabular numerals on all counts so they don't jitter (POLISH.md) */
   .tabular-nums {
+    font-variant-numeric: tabular-nums;
+  }
+  /* Signature display numbers: Switzer 200, tight tracking, tabular
+     (docs/design/DECISIONS.md). Use for due counts, stats, timers. */
+  .display-num {
+    font-family: var(--font-display);
+    font-weight: 200;
+    letter-spacing: -0.04em;
     font-variant-numeric: tabular-nums;
   }
 

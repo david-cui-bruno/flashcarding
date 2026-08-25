@@ -446,7 +446,7 @@ export function StudyDeckClient({
                 )}
               >
                 {intervals && (
-                  <span className={cn("text-[0.68rem] font-semibold tabular-nums", int)}>
+                  <span className={cn("display-num text-[0.72rem] font-light", int)}>
                     {intervals[key]}
                   </span>
                 )}
@@ -458,11 +458,11 @@ export function StudyDeckClient({
         )}
 
         <div className="flex flex-col items-center gap-0.5">
-          <div className="text-[1.05rem] font-semibold tabular-nums">
+          <div className="display-num text-[1.35rem] font-extralight">
             <span className="text-new">{triplet.nw}</span>
-            <span className="mx-1 font-normal text-muted-foreground">+</span>
+            <span className="mx-1 text-muted-foreground">+</span>
             <span className="text-learning">{triplet.learning}</span>
-            <span className="mx-1 font-normal text-muted-foreground">+</span>
+            <span className="mx-1 text-muted-foreground">+</span>
             <span className="text-due">{triplet.due}</span>
           </div>
           <div className="text-[0.62rem] tracking-wide text-muted-foreground">new · learning · due</div>

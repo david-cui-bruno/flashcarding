@@ -44,7 +44,10 @@ export async function updateSession(request: NextRequest) {
     path === "/sw.js" ||
     path === "/manifest.webmanifest" ||
     path.startsWith("/icons/") ||
-    path.startsWith("/api/cron/");
+    path.startsWith("/api/cron/") ||
+    // Server-to-server webhooks authenticate with their own shared secret
+    // (see app/api/billing/revenuecat/route.ts) — no browser session exists.
+    path.startsWith("/api/billing/");
 
   if (!authed && !isPublic) {
     const url = request.nextUrl.clone();

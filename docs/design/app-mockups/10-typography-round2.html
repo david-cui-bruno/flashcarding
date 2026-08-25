@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory — Typography Round 2 (Grotesques, no serifs)</title>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@200;300;400;500;600;700;800&family=Figtree:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@200;300;400;500;600;700;800&family=Onest:wght@200;300;400;500;600;700;800&family=Albert+Sans:wght@200;300;400;500;600;700;800&family=Urbanist:wght@200;300;400;500;600;700;800&family=Outfit:wght@200;300;400;500;600;700&family=Schibsted+Grotesk:wght@400;500;600;700;800&family=Geist:wght@200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  @import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&f[]=switzer@100,200,300,400,500,600,700&f[]=cabinet-grotesk@100,200,300,400,500,700,800&display=swap');
+  :root {
+    --bg:#f8fafc; --card:#fff; --border:#e2e8f0; --ink:#0f172a; --muted:#64748b;
+    --faint:#94a3b8; --cer:#0284c7; --cersoft:#e0f2fe;
+    --again:#ef4444; --hard:#f59e0b; --good:#22c55e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#16181d; color:#e2e8f0; font-family:-apple-system,sans-serif; padding:0 32px 90px; }
+  .pagebar { position:fixed; top:0; left:0; right:0; z-index:50; display:flex; gap:16px; align-items:center; padding:12px 20px; background:rgba(22,24,29,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .pagebar .title { font-weight:700; color:#fff; }
+  .lede { max-width:780px; margin:76px auto 8px; text-align:center; font-size:15px; line-height:1.6; color:#cbd5e1; }
+  .lede h1 { color:#fff; font-size:24px; margin-bottom:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(380px, 1fr)); gap:26px; max-width:1640px; margin:34px auto 0; }
+  .spec { background:var(--bg); border-radius:20px; overflow:hidden; color:var(--ink); }
+  .spec-head { padding:13px 18px 11px; border-bottom:1px solid var(--border); background:#fff; display:flex; justify-content:space-between; align-items:baseline; }
+  .spec-head .name { font-size:14.5px; font-weight:700; }
+  .spec-head .vibe { font-size:11.5px; color:var(--faint); }
+  .spec-body { padding:18px; display:flex; flex-direction:column; gap:13px; }
+  .wordmark { font-size:34px; line-height:1; letter-spacing:-.02em; }
+  .wordmark .dot { color:var(--cer); }
+  .bignum { font-size:52px; line-height:1; letter-spacing:-.03em; }
+  .bignum small { font-size:14px; letter-spacing:0; color:var(--muted); font-weight:500; margin-left:6px; }
+  .headline { font-size:20px; line-height:1.3; letter-spacing:-.01em; }
+  .sub { font-size:13.5px; color:var(--muted); line-height:1.5; margin-top:3px; }
+  .qa { background:var(--card); border:1px solid var(--border); border-radius:13px; padding:13px 15px; }
+  .qa .label { font-size:10px; font-weight:700; letter-spacing:.08em; color:var(--faint); text-transform:uppercase; }
+  .qa .q { font-size:16px; line-height:1.4; margin-top:4px; }
+  .qa .a { font-size:14px; color:var(--muted); line-height:1.45; margin-top:7px; padding-top:7px; border-top:1px dashed var(--border); }
+  .grades { display:flex; gap:6px; }
+  .g { flex:1; text-align:center; border-radius:10px; padding:8px 0; font-weight:600; font-size:12.5px; }
+  .g1 { background:#fef2f2; color:var(--again); } .g2 { background:#fffbeb; color:var(--hard); }
+  .g3 { background:#f0fdf4; color:var(--good); } .g4 { background:var(--cersoft); color:var(--cer); }
+</style>
+</head>
+<body>
+<div class="pagebar"><span class="title">Dory Design Language</span><span style="color:#7dd3fc;font-weight:600;">Typography · Round 2</span><span style="flex:1"></span><span style="color:#94a3b8;">grotesques only · thin display weights shown via the big number</span></div>
+
+<div class="lede">
+  <h1>Typography round 2 · around General Sans</h1>
+  All grotesques, no serifs. Each shows a <b>thin/light big number</b> (the B-layout hero) against
+  medium body — the thin-display + solid-body contrast is what makes "compact but airy" work.
+  #1 is your General Sans anchor for comparison.
+</div>
+
+<div class="grid">
+
+  <!-- 1 General Sans anchor -->
+  <div class="spec" style="font-family:'General Sans',sans-serif;">
+    <div class="spec-head"><span class="name">1 · General Sans</span><span class="vibe">your pick · the anchor</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:300;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Weight 300 number, 600 headline. Balanced, quietly confident.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 2 Switzer -->
+  <div class="spec" style="font-family:'Switzer',sans-serif;">
+    <div class="spec-head"><span class="name">2 · Switzer</span><span class="vibe">sharper, Swiss, goes very thin</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Weight 200 available — the thinnest credible display here. Crisper than General Sans.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 3 Cabinet Grotesk -->
+  <div class="spec" style="font-family:'Cabinet Grotesk',sans-serif;">
+    <div class="spec-head"><span class="name">3 · Cabinet Grotesk</span><span class="vibe">round shapes, big personality thin</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:700;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:700;">Turn anything into flashcards.</div><div class="sub">Most characterful of the set — round bowls, warm. Thin weight is striking.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 4 Hanken Grotesk -->
+  <div class="spec" style="font-family:'Hanken Grotesk',sans-serif;">
+    <div class="spec-head"><span class="name">4 · Hanken Grotesk</span><span class="vibe">humanist warmth, superb legibility</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:700;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Friendlier x-height, reads beautifully small — strong body-text choice.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 5 Geist -->
+  <div class="spec" style="font-family:'Geist',sans-serif;">
+    <div class="spec-head"><span class="name">5 · Geist</span><span class="vibe">Vercel's — precise, modern, cool</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Engineering-clean. Tightest, most "dev tool" of the set.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 6 Plus Jakarta Sans -->
+  <div class="spec" style="font-family:'Plus Jakarta Sans',sans-serif;">
+    <div class="spec-head"><span class="name">6 · Plus Jakarta Sans</span><span class="vibe">geometric-humanist, consumer-friendly</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:700;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Soft geometry, wide apertures. Popular in consumer fintech.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 7 Onest -->
+  <div class="spec" style="font-family:'Onest',sans-serif;">
+    <div class="spec-head"><span class="name">7 · Onest</span><span class="vibe">between Inter and Jakarta, calm</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Newer face; neutral but softer corners than Inter. Very quiet.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 8 Figtree -->
+  <div class="spec" style="font-family:'Figtree',sans-serif;">
+    <div class="spec-head"><span class="name">8 · Figtree</span><span class="vibe">friendly, rounded-ish, light</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:700;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:300;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Approachable without being cute. Good weights, compact metrics.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 9 Albert Sans -->
+  <div class="spec" style="font-family:'Albert Sans',sans-serif;">
+    <div class="spec-head"><span class="name">9 · Albert Sans</span><span class="vibe">Scandinavian geometric, elegant thin</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Nordic cleanliness; the 200 weight is graceful, not fragile.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 10 Urbanist -->
+  <div class="spec" style="font-family:'Urbanist',sans-serif;">
+    <div class="spec-head"><span class="name">10 · Urbanist</span><span class="vibe">low-contrast geometric, airy</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">Wide, open, breathes a lot — pairs naturally with a whitespace-heavy layout.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 11 Outfit -->
+  <div class="spec" style="font-family:'Outfit',sans-serif;">
+    <div class="spec-head"><span class="name">11 · Outfit</span><span class="vibe">pure geometric, thin-friendly</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:600;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:200;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:500;">Turn anything into flashcards.</div><div class="sub">Circle-geometry like Futura's grandkid. Thin numbers look like a fashion label.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 12 Schibsted Grotesk -->
+  <div class="spec" style="font-family:'Schibsted Grotesk',sans-serif;">
+    <div class="spec-head"><span class="name">12 · Schibsted Grotesk</span><span class="vibe">editorial grotesque, newsy</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:700;">Dory<span class="dot">.</span></div>
+      <div class="bignum" style="font-weight:400;">47<small>cards due</small></div>
+      <div><div class="headline" style="font-weight:600;">Turn anything into flashcards.</div><div class="sub">No thin weight (min 400) but strong character at bold — headline-first option.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-weight:500;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="lede" style="margin-top:40px;">
+  <div style="font-size:14px; color:#94a3b8; max-width:680px; margin:0 auto; line-height:1.6;">
+    My take: if General Sans already feels right, <b style="color:#e2e8f0;">2 (Switzer)</b> is its sharper sibling
+    with a real 200 weight — best thin-number game. <b style="color:#e2e8f0;">4 (Hanken)</b> is the best
+    body-text reader. A strong combo: <b style="color:#e2e8f0;">General Sans everywhere + Switzer 200 for big numbers</b>,
+    or single-family Switzer if you want maximum coherence.
+  </div>
+</div>
+</body>
+</html>

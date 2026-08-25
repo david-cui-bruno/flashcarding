@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory Design Language — Layout Exploration (Study)</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#f8fafc; --card:#fff; --border:#e2e8f0; --ink:#0f172a; --muted:#64748b;
+    --faint:#94a3b8; --cer:#0284c7; --cersoft:#e0f2fe;
+    --again:#ef4444; --hard:#f59e0b; --good:#22c55e; --easy:#0ea5e9;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#16181d; font-family:'Inter',-apple-system,sans-serif; color:#e2e8f0; padding:0 32px 90px; }
+  .pagebar { position:fixed; top:0; left:0; right:0; z-index:50; display:flex; gap:16px; align-items:center; padding:12px 20px; background:rgba(22,24,29,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .pagebar .title { font-weight:700; color:#fff; }
+  .lede { max-width:760px; margin:76px auto 8px; text-align:center; font-size:15px; line-height:1.6; color:#cbd5e1; }
+  .lede h1 { color:#fff; font-size:24px; margin-bottom:8px; }
+  .frames { display:flex; flex-wrap:wrap; gap:36px; justify-content:center; margin-top:34px; }
+  .frame-label { text-align:center; color:#94a3b8; font-size:13px; margin-top:12px; font-weight:600; max-width:340px; margin-left:auto; margin-right:auto; line-height:1.5; }
+  .frame-label b { color:#e2e8f0; }
+  .phone { width:360px; height:780px; background:var(--bg); border-radius:48px; border:9px solid #0b0c0f; box-shadow:0 24px 60px rgba(0,0,0,.55); position:relative; overflow:hidden; display:flex; flex-direction:column; color:var(--ink); }
+  .island { position:absolute; top:9px; left:50%; transform:translateX(-50%); width:110px; height:30px; background:#0b0c0f; border-radius:18px; z-index:30; }
+  .sb { height:48px; flex:none; display:flex; align-items:flex-end; justify-content:space-between; padding:0 26px 4px; font-size:13.5px; font-weight:600; }
+  .homedot { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:120px; height:4px; border-radius:3px; background:#0f172a; opacity:.85; z-index:30; }
+  .scr { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+</style>
+</head>
+<body>
+<div class="pagebar"><span class="title">Dory Design Language</span><span style="color:#7dd3fc;font-weight:600;">Layout Exploration · Study</span><span style="flex:1"></span><span style="color:#94a3b8;">4 directions, answer state shown</span></div>
+
+<div class="lede">
+  <h1>Layout · Study screen, 4 ways</h1>
+  The screen you see 100×/day. Same card in each. F: flat sheet (round 1). G: card object
+  you flip. H: reading mode with serif question. I: swipe-first with thumb-zone grades.
+</div>
+
+<div class="frames">
+
+  <!-- F. Flat sheet -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr">
+        <div style="display:flex; align-items:center; gap:12px; padding:6px 18px;">
+          <span style="width:30px;height:30px;border-radius:50%;background:#eef2f7;display:flex;align-items:center;justify-content:center;font-size:14px;">✕</span>
+          <div style="flex:1; height:6px; background:#e2e8f0; border-radius:4px; overflow:hidden;"><div style="width:38%; height:100%; background:var(--cer);"></div></div>
+          <span style="font-size:12.5px; font-weight:700; color:var(--muted);">11/30</span>
+        </div>
+        <div style="flex:1; padding:16px 24px 0; display:flex; flex-direction:column; justify-content:center; gap:16px;">
+          <div><div style="font-size:11px; font-weight:700; color:var(--faint); letter-spacing:.08em;">QUESTION</div><div style="font-size:17px; font-weight:600; color:var(--muted); margin-top:6px; line-height:1.4;">What enzyme catalyzes the rate-limiting step of glycolysis?</div></div>
+          <div style="height:1px; background:var(--border);"></div>
+          <div><div style="font-size:11px; font-weight:700; color:var(--cer); letter-spacing:.08em;">ANSWER</div><div style="font-size:23px; font-weight:700; margin-top:6px; letter-spacing:-.01em;">Phosphofructokinase‑1 (PFK‑1)</div><div style="font-size:14px; color:var(--muted); margin-top:8px; line-height:1.5;">Converts F6P → F1,6BP. Inhibited by ATP and citrate.</div></div>
+        </div>
+        <div style="flex:none; padding:0 14px 36px; display:flex; gap:7px;">
+          <div style="flex:1; text-align:center;"><div style="background:#fef2f2; color:var(--again); border-radius:12px; padding:11px 0; font-weight:700; font-size:14px;">Again</div><div style="font-size:10px; color:var(--faint); margin-top:4px; font-weight:600;">1m</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:#fffbeb; color:var(--hard); border-radius:12px; padding:11px 0; font-weight:700; font-size:14px;">Hard</div><div style="font-size:10px; color:var(--faint); margin-top:4px; font-weight:600;">2d</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:#f0fdf4; color:var(--good); border-radius:12px; padding:11px 0; font-weight:700; font-size:14px;">Good</div><div style="font-size:10px; color:var(--faint); margin-top:4px; font-weight:600;">5d</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:var(--cersoft); color:var(--easy); border-radius:12px; padding:11px 0; font-weight:700; font-size:14px;">Easy</div><div style="font-size:10px; color:var(--faint); margin-top:4px; font-weight:600;">12d</div></div>
+        </div>
+      </div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>F · Flat sheet</b> — round-1 baseline. Text-first, no card metaphor. Fastest to read, least delightful.</div>
+  </div>
+
+  <!-- G. Card object -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="background:#eef2f7;">
+        <div style="display:flex; align-items:center; gap:12px; padding:6px 18px;">
+          <span style="width:30px;height:30px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;">✕</span>
+          <div style="flex:1; text-align:center; font-size:13px; font-weight:700; color:var(--muted);">Biochem Final</div>
+          <span style="font-size:12.5px; font-weight:700; color:var(--muted);">11/30</span>
+        </div>
+        <div style="flex:1; padding:14px 20px 8px; position:relative;">
+          <div style="position:absolute; inset:26px 12px auto; height:430px; background:#fff; border-radius:22px; transform:rotate(2.6deg); opacity:.5; border:1px solid var(--border);"></div>
+          <div style="position:absolute; inset:18px 16px auto; height:438px; background:#fff; border-radius:22px; transform:rotate(-1.8deg); opacity:.75; border:1px solid var(--border);"></div>
+          <div style="position:relative; background:#fff; border-radius:22px; border:1px solid var(--border); box-shadow:0 18px 40px rgba(15,23,42,.14); height:452px; padding:24px; display:flex; flex-direction:column;">
+            <div style="font-size:11px; font-weight:700; color:var(--faint); letter-spacing:.08em;">QUESTION</div>
+            <div style="font-size:18px; font-weight:650; margin-top:8px; line-height:1.4; color:var(--muted);">What enzyme catalyzes the rate-limiting step of glycolysis?</div>
+            <div style="flex:1; display:flex; flex-direction:column; justify-content:center; border-top:1px dashed var(--border); margin-top:16px; padding-top:16px;">
+              <div style="font-size:11px; font-weight:700; color:var(--cer); letter-spacing:.08em;">ANSWER</div>
+              <div style="font-size:24px; font-weight:800; letter-spacing:-.015em; margin-top:8px; line-height:1.25;">Phosphofructo­kinase‑1<br>(PFK‑1)</div>
+              <div style="font-size:14px; color:var(--muted); margin-top:10px; line-height:1.5;">F6P → F1,6BP. Inhibited by ATP &amp; citrate.</div>
+            </div>
+            <div style="font-size:12px; color:var(--faint);">⚑ bad card</div>
+          </div>
+        </div>
+        <div style="flex:none; padding:0 14px 36px; display:flex; gap:7px;">
+          <div style="flex:1; background:#fff; border:1.5px solid #fecaca; color:var(--again); border-radius:13px; padding:12px 0; font-weight:800; font-size:14px; text-align:center;">1m</div>
+          <div style="flex:1; background:#fff; border:1.5px solid #fde68a; color:var(--hard); border-radius:13px; padding:12px 0; font-weight:800; font-size:14px; text-align:center;">2d</div>
+          <div style="flex:1.4; background:var(--good); border:1.5px solid var(--good); color:#fff; border-radius:13px; padding:12px 0; font-weight:800; font-size:14px; text-align:center;">5d ✓</div>
+          <div style="flex:1; background:#fff; border:1.5px solid #bae6fd; color:var(--easy); border-radius:13px; padding:12px 0; font-weight:800; font-size:14px; text-align:center;">12d</div>
+        </div>
+      </div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>G · Card object</b> — a real deck with depth; next cards peek behind. Grades collapse to intervals with Good enlarged as default. Tactile, most "flashcard."</div>
+  </div>
+
+  <!-- H. Reading mode -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="background:#fbfaf8;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 22px;">
+          <span style="font-size:14px;">✕</span>
+          <span style="font-size:11.5px; font-weight:600; color:#a8a29e; letter-spacing:.04em;">11 OF 30 · BIOCHEM</span>
+          <span style="font-size:14px; color:#a8a29e;">⚑</span>
+        </div>
+        <div style="flex:1; padding:26px 30px 0; display:flex; flex-direction:column;">
+          <div style="font-family:'Newsreader',serif; font-size:25px; font-weight:500; line-height:1.35; color:#1c1917;">What enzyme catalyzes the rate‑limiting step of glycolysis?</div>
+          <div style="width:44px; height:2px; background:#0284c7; margin:22px 0;"></div>
+          <div style="font-family:'Newsreader',serif; font-size:21px; font-weight:600; color:#0284c7; line-height:1.4;">Phosphofructokinase‑1 (PFK‑1)</div>
+          <div style="font-family:'Newsreader',serif; font-size:16.5px; color:#57534e; margin-top:12px; line-height:1.55;">Converts fructose‑6‑phosphate to fructose‑1,6‑bisphosphate — the committed step. Allosterically inhibited by ATP and citrate.</div>
+        </div>
+        <div style="flex:none; padding:0 22px 34px;">
+          <div style="display:flex; justify-content:space-between; font-size:11px; color:#a8a29e; font-weight:600; padding:0 4px 8px;"><span>forgot</span><span>knew it</span></div>
+          <div style="display:flex; gap:6px;">
+            <div style="flex:1; height:46px; border-radius:12px; background:#1c1917; color:#fbfaf8; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">Again</div>
+            <div style="flex:1; height:46px; border-radius:12px; background:#e7e5e4; color:#57534e; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">Hard</div>
+            <div style="flex:1; height:46px; border-radius:12px; background:#e7e5e4; color:#57534e; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">Good</div>
+            <div style="flex:1; height:46px; border-radius:12px; background:#e7e5e4; color:#57534e; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px;">Easy</div>
+          </div>
+        </div>
+      </div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>H · Reading mode</b> — serif type on warm paper, zero chrome. The anti-app: studying as reading. Monochrome grades keep color for content only.</div>
+  </div>
+
+  <!-- I. Thumb-zone -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="background:#0f172a; color:#f8fafc;">
+        <div style="display:flex; align-items:center; gap:12px; padding:6px 18px;">
+          <span style="font-size:14px; opacity:.6;">✕</span>
+          <div style="flex:1; height:5px; background:rgba(255,255,255,.14); border-radius:3px; overflow:hidden;"><div style="width:38%; height:100%; background:#38bdf8;"></div></div>
+          <span style="font-size:12px; font-weight:700; opacity:.6;">19 left</span>
+        </div>
+        <div style="flex:1; padding:20px 26px 0; display:flex; flex-direction:column; justify-content:center; gap:18px;">
+          <div style="font-size:13px; font-weight:600; color:#7dd3fc; opacity:.8;">← swipe: again · swipe: good →</div>
+          <div style="font-size:22px; font-weight:700; line-height:1.35; letter-spacing:-.01em;">What enzyme catalyzes the rate‑limiting step of glycolysis?</div>
+          <div style="background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:16px; padding:16px;">
+            <div style="font-size:20px; font-weight:800; color:#38bdf8;">PFK‑1</div>
+            <div style="font-size:13.5px; color:#cbd5e1; margin-top:6px; line-height:1.5;">Phosphofructokinase‑1 · F6P → F1,6BP · inhibited by ATP + citrate</div>
+          </div>
+        </div>
+        <div style="flex:none; padding:0 20px 30px;">
+          <div style="display:flex; gap:10px; align-items:center;">
+            <div style="width:64px; height:64px; border-radius:50%; background:rgba(239,68,68,.15); border:2px solid #ef4444; color:#f87171; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;">✕</div>
+            <div style="flex:1; display:flex; gap:8px;">
+              <div style="flex:1; height:44px; border-radius:11px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#fbbf24;">Hard</div>
+              <div style="flex:1; height:44px; border-radius:11px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:13px; color:#7dd3fc;">Easy</div>
+            </div>
+            <div style="width:64px; height:64px; border-radius:50%; background:rgba(34,197,94,.15); border:2px solid #22c55e; color:#4ade80; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px;">✓</div>
+          </div>
+          <div style="text-align:center; font-size:11px; color:rgba(255,255,255,.4); margin-top:10px; font-weight:600;">big targets = Again / Good · edge buttons for the rest</div>
+        </div>
+      </div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>I · Thumb-zone dark</b> — night-study mode. Again/Good are giant circular targets (they're 90% of grades); swipe gestures for speed. Most opinionated ergonomics.</div>
+  </div>
+
+</div>
+
+<div class="lede" style="margin-top:40px;">
+  <div style="font-size:14px; color:#94a3b8; max-width:660px; margin:0 auto; line-height:1.6;">
+    My take: <b style="color:#e2e8f0;">G</b> for the core loop (the peeking deck sells "app" instantly and
+    the enlarged Good button matches real grade distribution), with <b style="color:#e2e8f0;">H</b> as an optional
+    "reading" theme later — it's the most beautiful but least conventional. B (home) + G (study) is a coherent
+    pair: quiet editorial outside the session, tactile object inside it.
+  </div>
+</div>
+</body>
+</html>

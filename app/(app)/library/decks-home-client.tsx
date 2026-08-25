@@ -74,6 +74,16 @@ export function DecksHome({ decks, triageCount }: { decks: DeckSummary[]; triage
   if (!online) return <OfflineLibrary />;
 
   const empty = decks.length === 0;
+  const totalDue = decks.reduce((n, d) => n + d.dueNow, 0);
+  // ~15s/card matches the session pace we quote elsewhere
+  const dueMinutes = Math.max(1, Math.round((totalDue * 15) / 60));
+  // "Study now" = the deck with the most due cards (study stays deck-by-deck)
+  const topDeck = decks.reduce<DeckSummary | null>(
+    (best, d) => (d.dueNow > (best?.dueNow ?? 0) ? d : best),
+    null,
+  );
+  const hour = new Date().getHours();
+  const greeting = hour < 5 ? "Up late" : hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
 
   return (
     <div className="px-4 py-6 md:p-10">
@@ -98,7 +108,7 @@ export function DecksHome({ decks, triageCount }: { decks: DeckSummary[]; triage
           </Link>
         )}
 
-        <div className="flex items-end justify-between pb-6">
+        <div className="flex items-end justify-between pb-6 max-md:hidden">
           <div>
             <h1 className="text-2xl font-medium tracking-tight md:text-3xl">Decks</h1>
             <p className="mt-1 text-sm text-muted-foreground">
@@ -106,6 +116,35 @@ export function DecksHome({ decks, triageCount }: { decks: DeckSummary[]; triage
             </p>
           </div>
         </div>
+
+        {/* MOBILE hero — A2 "airy hero" (docs/design/DECISIONS.md): greeting, giant
+            thin Switzer due-count, single Study button, no boxes. */}
+        {!empty && (
+          <div className="md:hidden">
+            <div className="flex items-center justify-between pt-1">
+              <span className="text-[15px] font-medium text-muted-foreground">{greeting}</span>
+            </div>
+            <div className="mt-7">
+              <div className="display-num text-[84px] leading-[0.95] text-foreground">{totalDue}</div>
+              <p className="mt-2.5 text-base font-medium text-muted-foreground">
+                {totalDue === 0
+                  ? "all caught up — nothing due"
+                  : dueMinutes > 90
+                    ? `card${totalDue === 1 ? "" : "s"} due · chip away at it`
+                    : `card${totalDue === 1 ? "" : "s"} due · about ${dueMinutes} min`}
+              </p>
+            </div>
+            {topDeck && totalDue > 0 && (
+              <Link
+                href={`/study/${topDeck.id}?mode=due`}
+                className="mt-6 flex h-[54px] items-center justify-center rounded-2xl bg-primary text-[16.5px] font-semibold text-primary-foreground shadow-[0_10px_24px_rgba(2,132,199,.28)] active:scale-[.99]"
+              >
+                Study now
+              </Link>
+            )}
+            <div className="h-9" />
+          </div>
+        )}
 
         {empty ? (
           <EmptyState />
@@ -124,12 +163,13 @@ export function DecksHome({ decks, triageCount }: { decks: DeckSummary[]; triage
               <NewDeckTile />
             </div>
 
-            {/* MOBILE: clean list, no numbers */}
-            <div className="flex flex-col gap-2.5 md:hidden">
-              {decks.map((d) => (
+            {/* MOBILE: A2 hairline list — no boxes, thin count numerals */}
+            <div className="flex flex-col md:hidden">
+              {decks.map((d, i) => (
                 <DeckRow
                   key={d.id}
                   deck={d}
+                  last={i === decks.length - 1}
                   onRename={() => setRenameTarget(d)}
                   onDelete={() => setDeleteTarget(d)}
                 />
@@ -324,42 +364,40 @@ function DeckTile({
 
 function DeckRow({
   deck,
+  last,
   onRename,
   onDelete,
 }: {
   deck: DeckSummary;
+  last?: boolean;
   onRename: () => void;
   onDelete: () => void;
 }) {
   const lit = deck.state === "due" || deck.state === "new";
+  // A2 "airy hero" row (docs/design/DECISIONS.md): hairline divider, no box,
+  // thin Switzer due-count as the trailing numeral.
   return (
-    <div
-      className={cn(
-        "relative flex items-center gap-3 rounded-xl border border-border/70 bg-card p-4 shadow-[0_1px_3px_rgba(15,23,42,.05)]",
-        lit && "border-transparent shadow-[0_0_0_1.5px_var(--ring),0_2px_8px_-2px_rgba(15,23,42,.08)]",
-      )}
-    >
-      <Link href={`/study/${deck.id}`} className="absolute inset-0 z-0 rounded-xl" aria-label={`Study ${deck.name}`} />
+    <div className={cn("relative flex items-center gap-3.5 py-4", !last && "border-b border-border")}>
+      <Link href={`/study/${deck.id}`} className="absolute inset-0 z-0" aria-label={`Study ${deck.name}`} />
       <span
         className={cn(
-          "flex size-11 items-center justify-center rounded-xl",
+          "flex size-10 items-center justify-center rounded-xl",
           lit ? "bg-accent text-accent-foreground" : "bg-muted text-muted-foreground",
         )}
       >
-        <Layers className="size-[22px]" />
+        <Layers className="size-[20px]" />
       </span>
       <div className="min-w-0 flex-1 leading-tight">
-        <div className="truncate font-medium">{deck.name}</div>
-        <div className="text-[0.78rem] text-muted-foreground tabular-nums">{deck.total} cards</div>
+        <div className="truncate text-[16.5px] font-medium">{deck.name}</div>
+        <div className="mt-0.5 text-[0.78rem] text-muted-foreground tabular-nums">
+          {deck.total} cards{deck.state === "caught-up" ? " · caught up ✓" : ""}
+        </div>
       </div>
-      <span
-        className={cn(
-          "z-10 flex size-[34px] items-center justify-center rounded-full",
-          lit ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground",
-        )}
-      >
-        <Play className="size-[15px] fill-current" strokeWidth={0} />
-      </span>
+      {deck.dueNow > 0 ? (
+        <span className="display-num z-0 text-[22px] text-primary">{deck.dueNow}</span>
+      ) : (
+        <span className="display-num z-0 text-[22px] text-border">–</span>
+      )}
       <ManageMenu deck={deck} onRename={onRename} onDelete={onDelete}>
         <button
           className="z-10 flex size-[30px] items-center justify-center rounded-lg text-muted-foreground active:bg-muted"

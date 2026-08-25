@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory — Home Layout Round 2 (A/D hybrid, airy)</title>
+<style>
+  @import url('https://api.fontshare.com/v2/css?f[]=general-sans@200,300,400,500,600,700&display=swap');
+  :root {
+    --bg:#fafbfc; --card:#fff; --border:#e8edf2; --ink:#0f172a; --muted:#64748b;
+    --faint:#94a3b8; --cer:#0284c7; --cersoft:#e0f2fe;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#16181d; font-family:'General Sans',-apple-system,sans-serif; color:#e2e8f0; padding:0 32px 90px; }
+  .pagebar { position:fixed; top:0; left:0; right:0; z-index:50; display:flex; gap:16px; align-items:center; padding:12px 20px; background:rgba(22,24,29,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .pagebar .title { font-weight:700; color:#fff; }
+  .lede { max-width:780px; margin:76px auto 8px; text-align:center; font-size:15px; line-height:1.6; color:#cbd5e1; }
+  .lede h1 { color:#fff; font-size:24px; margin-bottom:8px; }
+  .frames { display:flex; flex-wrap:wrap; gap:36px; justify-content:center; margin-top:34px; }
+  .frame-label { text-align:center; color:#94a3b8; font-size:13px; margin-top:12px; font-weight:500; max-width:340px; margin-left:auto; margin-right:auto; line-height:1.5; }
+  .frame-label b { color:#e2e8f0; }
+  .phone { width:360px; height:780px; background:var(--bg); border-radius:48px; border:9px solid #0b0c0f; box-shadow:0 24px 60px rgba(0,0,0,.55); position:relative; overflow:hidden; display:flex; flex-direction:column; color:var(--ink); }
+  .island { position:absolute; top:9px; left:50%; transform:translateX(-50%); width:110px; height:30px; background:#0b0c0f; border-radius:18px; z-index:30; }
+  .sb { height:48px; flex:none; display:flex; align-items:flex-end; justify-content:space-between; padding:0 26px 4px; font-size:13.5px; font-weight:500; }
+  .homedot { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:120px; height:4px; border-radius:3px; background:#0f172a; opacity:.85; z-index:30; }
+  .scr { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .tabbar { flex:none; height:62px; border-top:.5px solid var(--border); background:rgba(255,255,255,.96); display:flex; align-items:center; padding:0 8px 14px; }
+  .tab { flex:1; text-align:center; font-size:10px; font-weight:600; color:var(--faint); }
+  .tab.on { color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="pagebar"><span class="title">Dory Design Language</span><span style="color:#7dd3fc;font-weight:600;">Home · Round 2</span><span style="flex:1"></span><span style="color:#94a3b8;">A/D hybrids · General Sans · compact + air</span></div>
+
+<div class="lede">
+  <h1>Home round 2 · compact, bigger type, more air</h1>
+  Directions from your notes: keep A's clarity or D's urgency-cards, but tighter content,
+  larger type, generous whitespace. All in General Sans. Thin 200-weight numbers do the talking.
+</div>
+
+<div class="frames">
+
+  <!-- A2: airy hero -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="padding:18px 26px 0; gap:0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:15px; font-weight:600; color:var(--muted);">Good evening</span>
+          <span style="font-size:13px; font-weight:600; color:var(--cer);">🔥 13</span>
+        </div>
+        <div style="margin-top:34px;">
+          <div style="font-size:88px; font-weight:200; letter-spacing:-.045em; line-height:.95;">47</div>
+          <div style="font-size:16px; font-weight:500; color:var(--muted); margin-top:10px;">cards due · about 12 minutes</div>
+        </div>
+        <div style="margin-top:26px; background:var(--cer); color:#fff; border-radius:16px; height:54px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:16.5px; box-shadow:0 10px 24px rgba(2,132,199,.28);">Study now</div>
+        <div style="margin-top:44px; display:flex; flex-direction:column;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🧬</span><span style="font-size:16.5px; font-weight:500;">Biochem Final</span></div>
+            <span style="font-size:22px; font-weight:300; color:var(--cer);">23</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🇪🇸</span><span style="font-size:16.5px; font-weight:500;">Spanish Vocab</span></div>
+            <span style="font-size:22px; font-weight:300; color:var(--cer);">16</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0;">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">⚖️</span><span style="font-size:16.5px; font-weight:500;">Con Law Cases</span></div>
+            <span style="font-size:22px; font-weight:300; color:var(--cer);">8</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><span class="tab on">▤<br>Decks</span><span class="tab">▦<br>Stats</span><span class="tab"><span style="display:inline-flex; width:42px; height:42px; margin-top:-16px; border-radius:50%; background:var(--ink); color:#fff; align-items:center; justify-content:center; font-size:22px;">+</span></span><span class="tab">☀<br>Review</span><span class="tab">◉<br>Profile</span></div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>A2 · Airy hero</b> — A's structure, B's giant thin number, no card container at all. Deck rows are hairline dividers, not boxes. Maximum whitespace.</div>
+  </div>
+
+  <!-- D2: compact urgency stack -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="padding:18px 24px 0; gap:0;">
+        <div style="display:flex; justify-content:space-between; align-items:baseline;">
+          <span style="font-size:28px; font-weight:600; letter-spacing:-.02em;">Today</span>
+          <span style="font-size:13px; font-weight:600; color:var(--cer);">🔥 13 · 91%</span>
+        </div>
+        <div style="font-size:14.5px; font-weight:500; color:var(--muted); margin-top:4px;">47 due · 12 min to clear</div>
+
+        <div style="margin-top:22px; border-radius:22px; background:var(--ink); color:#fff; padding:22px; position:relative; overflow:hidden;">
+          <div style="position:absolute; right:-14px; top:-18px; font-size:110px; font-weight:200; opacity:.12; letter-spacing:-.05em;">23</div>
+          <div style="font-size:12px; font-weight:600; opacity:.6; letter-spacing:.05em;">UP NEXT · EXAM IN 4 DAYS</div>
+          <div style="font-size:22px; font-weight:600; margin-top:6px;">🧬 Biochem Final</div>
+          <div style="display:flex; align-items:baseline; gap:8px; margin-top:14px;">
+            <span style="font-size:44px; font-weight:200; letter-spacing:-.03em; line-height:1;">23</span>
+            <span style="font-size:13.5px; opacity:.65;">due · ~6 min</span>
+          </div>
+          <div style="margin-top:16px; background:#fff; color:var(--ink); border-radius:12px; height:44px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15px;">Start</div>
+        </div>
+
+        <div style="margin-top:18px; display:flex; flex-direction:column; gap:2px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 4px;">
+            <div style="display:flex; align-items:center; gap:11px;"><span style="font-size:18px;">🇪🇸</span><div><div style="font-size:15.5px; font-weight:500;">Spanish Vocab</div><div style="font-size:12px; color:var(--faint); margin-top:1px;">daily habit</div></div></div>
+            <span style="font-size:20px; font-weight:300; color:var(--cer);">16</span>
+          </div>
+          <div style="height:1px; background:var(--border);"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 4px;">
+            <div style="display:flex; align-items:center; gap:11px;"><span style="font-size:18px;">⚖️</span><div><div style="font-size:15.5px; font-weight:500;">Con Law Cases</div><div style="font-size:12px; color:var(--faint); margin-top:1px;">steady</div></div></div>
+            <span style="font-size:20px; font-weight:300; color:var(--cer);">8</span>
+          </div>
+          <div style="height:1px; background:var(--border);"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:14px 4px; opacity:.55;">
+            <div style="display:flex; align-items:center; gap:11px;"><span style="font-size:18px;">🎨</span><div><div style="font-size:15.5px; font-weight:500;">Art History</div><div style="font-size:12px; color:var(--faint); margin-top:1px;">caught up ✓</div></div></div>
+            <span style="font-size:20px; font-weight:300; color:#cbd5e1;">–</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><span class="tab on">▤<br>Decks</span><span class="tab">▦<br>Stats</span><span class="tab"><span style="display:inline-flex; width:42px; height:42px; margin-top:-16px; border-radius:50%; background:var(--ink); color:#fff; align-items:center; justify-content:center; font-size:22px;">+</span></span><span class="tab">☀<br>Review</span><span class="tab">◉<br>Profile</span></div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>D2 · One urgent card</b> — D's dark urgency card but only for the top deck; the rest collapse to a quiet hairline list. Compact, clear "do this next."</div>
+  </div>
+
+  <!-- AD3: minimal count + inline deck chips -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="padding:18px 26px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:22px; font-weight:600; letter-spacing:-.02em;">Dory<span style="color:var(--cer);">.</span></span>
+          <span style="width:32px; height:32px; border-radius:50%; background:var(--cersoft); display:flex; align-items:center; justify-content:center; color:var(--cer); font-weight:600; font-size:14px;">D</span>
+        </div>
+
+        <div style="flex:1; display:flex; flex-direction:column; justify-content:center; margin-top:-30px;">
+          <div style="text-align:center;">
+            <div style="font-size:15px; font-weight:500; color:var(--muted);">Monday · 🔥 13</div>
+            <div style="font-size:120px; font-weight:200; letter-spacing:-.05em; line-height:1; margin-top:8px;">47</div>
+            <div style="font-size:16px; font-weight:500; color:var(--muted); margin-top:8px;">cards · 12 min</div>
+          </div>
+          <div style="display:flex; justify-content:center; gap:8px; margin-top:26px; flex-wrap:wrap;">
+            <span style="background:#fff; border:1px solid var(--border); border-radius:999px; padding:8px 16px; font-size:13.5px; font-weight:500;">🧬 23</span>
+            <span style="background:#fff; border:1px solid var(--border); border-radius:999px; padding:8px 16px; font-size:13.5px; font-weight:500;">🇪🇸 16</span>
+            <span style="background:#fff; border:1px solid var(--border); border-radius:999px; padding:8px 16px; font-size:13.5px; font-weight:500;">⚖️ 8</span>
+          </div>
+          <div style="margin:30px 10px 0; background:var(--cer); color:#fff; border-radius:16px; height:56px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:17px; box-shadow:0 10px 26px rgba(2,132,199,.3);">Study everything</div>
+          <div style="text-align:center; margin-top:14px; font-size:14px; font-weight:500; color:var(--cer);">Pick a deck</div>
+        </div>
+      </div>
+      <div class="tabbar"><span class="tab on">▤<br>Decks</span><span class="tab">▦<br>Stats</span><span class="tab"><span style="display:inline-flex; width:42px; height:42px; margin-top:-16px; border-radius:50%; background:var(--ink); color:#fff; align-items:center; justify-content:center; font-size:22px;">+</span></span><span class="tab">☀<br>Review</span><span class="tab">◉<br>Profile</span></div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>AD3 · Centered count</b> — the whole home is one number, deck chips as satellites. Extreme air; decks one tap away. Closest to a "zen" opening.</div>
+  </div>
+
+  <!-- A4: airy hero w/ soft cards -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="padding:18px 24px 0;">
+        <div style="font-size:26px; font-weight:600; letter-spacing:-.02em;">Decks</div>
+        <div style="margin-top:18px; background:linear-gradient(140deg,#f0f9ff,#e0f2fe); border:1px solid #bae6fd; border-radius:20px; padding:22px;">
+          <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div>
+              <div style="display:flex; align-items:baseline; gap:8px;">
+                <span style="font-size:56px; font-weight:200; letter-spacing:-.04em; line-height:1; color:var(--ink);">47</span>
+                <span style="font-size:14px; font-weight:500; color:var(--muted);">due today</span>
+              </div>
+              <div style="font-size:13.5px; color:var(--muted); margin-top:6px;">about 12 minutes · 3 decks</div>
+            </div>
+            <span style="font-size:12.5px; font-weight:600; color:var(--cer); background:#fff; border-radius:999px; padding:5px 11px;">🔥 13</span>
+          </div>
+          <div style="margin-top:16px; background:var(--cer); color:#fff; border-radius:13px; height:48px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:15.5px;">Study now</div>
+        </div>
+        <div style="margin-top:24px; display:flex; flex-direction:column; gap:12px;">
+          <div style="background:#fff; border:1px solid var(--border); border-radius:18px; padding:18px 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div><div style="font-size:17px; font-weight:600;">🧬 Biochem Final</div><div style="font-size:13px; color:var(--faint); margin-top:3px;">exam in 4 days · 91%</div></div>
+            <span style="font-size:26px; font-weight:200; color:var(--cer);">23</span>
+          </div>
+          <div style="background:#fff; border:1px solid var(--border); border-radius:18px; padding:18px 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div><div style="font-size:17px; font-weight:600;">🇪🇸 Spanish Vocab</div><div style="font-size:13px; color:var(--faint); margin-top:3px;">daily habit · 94%</div></div>
+            <span style="font-size:26px; font-weight:200; color:var(--cer);">16</span>
+          </div>
+          <div style="background:#fff; border:1px solid var(--border); border-radius:18px; padding:18px 20px; display:flex; justify-content:space-between; align-items:center;">
+            <div><div style="font-size:17px; font-weight:600;">⚖️ Con Law Cases</div><div style="font-size:13px; color:var(--faint); margin-top:3px;">steady · 88%</div></div>
+            <span style="font-size:26px; font-weight:200; color:var(--cer);">8</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><span class="tab on">▤<br>Decks</span><span class="tab">▦<br>Stats</span><span class="tab"><span style="display:inline-flex; width:42px; height:42px; margin-top:-16px; border-radius:50%; background:var(--ink); color:#fff; align-items:center; justify-content:center; font-size:22px;">+</span></span><span class="tab">☀<br>Review</span><span class="tab">◉<br>Profile</span></div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>A4 · Soft-tint hero</b> — A's shape but the hero is a pale cerulean tint (not saturated), thin numbers everywhere, roomy 18px-radius deck cards. The "premium calm" take.</div>
+  </div>
+
+</div>
+
+<div class="lede" style="margin-top:40px;">
+  <div style="font-size:14px; color:#94a3b8; max-width:680px; margin:0 auto; line-height:1.6;">
+    My take: <b style="color:#e2e8f0;">A2</b> nails "compact, bigger fonts, more whitespace" — no boxes, hairlines
+    only, the 200-weight number as the hero. <b style="color:#e2e8f0;">A4</b> is the safer, softer version of the same
+    idea. D2 keeps D's "do this next" energy in a calmer wrapper. All pair with the F study screen.
+  </div>
+</div>
+</body>
+</html>

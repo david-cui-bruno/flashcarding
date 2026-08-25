@@ -26,7 +26,7 @@ heavy users. Proposed model:
 | Tier | Price | Gets |
 |---|---|---|
 | Free | $0 | Unlimited study + FSRS + `.apkg`/CSV import |
-| Pro | ~$3.99/mo or ~$29.99/yr | AI card generation, taste-feedback loop |
+| Pro | ~$2.99/mo or ~$19.99/yr | AI card generation, taste-feedback loop |
 
 - Apple takes 15% (Small Business Program, under $1M/yr) — enroll after developer
   account exists.
