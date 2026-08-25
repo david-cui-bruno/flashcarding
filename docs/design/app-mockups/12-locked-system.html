@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory — Locked Design System (canonical spec)</title>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @import url('https://api.fontshare.com/v2/css?f[]=switzer@200,300&display=swap');
+  :root {
+    --bg:#fafbfc; --card:#fff; --border:#e8edf2; --ink:#0f172a; --muted:#64748b;
+    --faint:#94a3b8; --cer:#0284c7; --cersoft:#e0f2fe;
+    --again:#ef4444; --hard:#f59e0b; --good:#22c55e; --easy:#0ea5e9;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#16181d; font-family:'Schibsted Grotesk',-apple-system,sans-serif; color:#e2e8f0; padding:0 32px 90px; }
+  .num { font-family:'Switzer',sans-serif; font-weight:200; letter-spacing:-.04em; font-variant-numeric:tabular-nums; }
+  .pagebar { position:fixed; top:0; left:0; right:0; z-index:50; display:flex; gap:16px; align-items:center; padding:12px 20px; background:rgba(22,24,29,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .pagebar .title { font-weight:700; color:#fff; }
+  .lede { max-width:780px; margin:76px auto 8px; text-align:center; font-size:15px; line-height:1.6; color:#cbd5e1; }
+  .lede h1 { color:#fff; font-size:24px; margin-bottom:8px; }
+  .frames { display:flex; flex-wrap:wrap; gap:36px; justify-content:center; margin-top:34px; }
+  .frame-label { text-align:center; color:#94a3b8; font-size:13px; margin-top:12px; font-weight:500; max-width:340px; margin-left:auto; margin-right:auto; line-height:1.5; }
+  .frame-label b { color:#e2e8f0; }
+  .phone { width:360px; height:780px; background:var(--bg); border-radius:48px; border:9px solid #0b0c0f; box-shadow:0 24px 60px rgba(0,0,0,.55); position:relative; overflow:hidden; display:flex; flex-direction:column; color:var(--ink); }
+  .island { position:absolute; top:9px; left:50%; transform:translateX(-50%); width:110px; height:30px; background:#0b0c0f; border-radius:18px; z-index:30; }
+  .sb { height:48px; flex:none; display:flex; align-items:flex-end; justify-content:space-between; padding:0 26px 4px; font-size:13.5px; font-weight:500; }
+  .homedot { position:absolute; bottom:7px; left:50%; transform:translateX(-50%); width:120px; height:4px; border-radius:3px; background:#0f172a; opacity:.85; z-index:30; }
+  .scr { flex:1; display:flex; flex-direction:column; overflow:hidden; }
+  .tabbar { flex:none; height:62px; border-top:.5px solid var(--border); background:rgba(255,255,255,.96); display:flex; align-items:center; padding:0 8px 14px; }
+  .tab { flex:1; text-align:center; font-size:10px; font-weight:600; color:var(--faint); }
+  .tab.on { color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="pagebar"><span class="title">Dory Design System</span><span style="color:#7dd3fc;font-weight:600;">LOCKED · canonical spec</span><span style="flex:1"></span><span style="color:#94a3b8;">Schibsted Grotesk + Switzer 200 · A2 home · F study</span></div>
+
+<div class="lede">
+  <h1>The locked system</h1>
+  Owner-approved 2026-08-25 (docs/design/DECISIONS.md). These two frames are the
+  implementation spec: A2 home and F study rendered in the real typefaces.
+</div>
+
+<div class="frames">
+
+  <!-- A2 home in locked type -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr" style="padding:18px 26px 0;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:15px; font-weight:500; color:var(--muted);">Good evening</span>
+          <span style="font-size:13px; font-weight:600; color:var(--cer);">🔥 13</span>
+        </div>
+        <div style="margin-top:34px;">
+          <div class="num" style="font-size:88px; line-height:.95;">47</div>
+          <div style="font-size:16px; font-weight:500; color:var(--muted); margin-top:10px;">cards due · about 12 minutes</div>
+        </div>
+        <div style="margin-top:26px; background:var(--cer); color:#fff; border-radius:16px; height:54px; display:flex; align-items:center; justify-content:center; font-weight:600; font-size:16.5px; box-shadow:0 10px 24px rgba(2,132,199,.28);">Study now</div>
+        <div style="margin-top:44px;">
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🧬</span><span style="font-size:16.5px; font-weight:500;">Biochem Final</span></div>
+            <span class="num" style="font-size:22px; color:var(--cer);">23</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0; border-bottom:1px solid var(--border);">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">🇪🇸</span><span style="font-size:16.5px; font-weight:500;">Spanish Vocab</span></div>
+            <span class="num" style="font-size:22px; color:var(--cer);">16</span>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:16px 0;">
+            <div style="display:flex; align-items:center; gap:12px;"><span style="font-size:20px;">⚖️</span><span style="font-size:16.5px; font-weight:500;">Con Law Cases</span></div>
+            <span class="num" style="font-size:22px; color:var(--cer);">8</span>
+          </div>
+        </div>
+      </div>
+      <div class="tabbar"><span class="tab on">▤<br>Decks</span><span class="tab">▦<br>Stats</span><span class="tab"><span style="display:inline-flex; width:42px; height:42px; margin-top:-16px; border-radius:50%; background:var(--ink); color:#fff; align-items:center; justify-content:center; font-size:22px;">+</span></span><span class="tab">☀<br>Review</span><span class="tab">◉<br>Profile</span></div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>Home · A2 in Schibsted + Switzer</b> — the 200-weight Switzer 47 against Schibsted body is the brand moment. Hairlines, no boxes.</div>
+  </div>
+
+  <!-- F study in locked type -->
+  <div>
+    <div class="phone">
+      <div class="island"></div><div class="sb"><span>9:41</span><span>▮▮ ᯤ ▐</span></div>
+      <div class="scr">
+        <div style="display:flex; align-items:center; gap:12px; padding:6px 18px;">
+          <span style="width:30px;height:30px;border-radius:50%;background:#eef2f7;display:flex;align-items:center;justify-content:center;font-size:14px;">✕</span>
+          <div style="flex:1; height:6px; background:#e8edf2; border-radius:4px; overflow:hidden;"><div style="width:38%; height:100%; background:var(--cer);"></div></div>
+          <span class="num" style="font-size:15px; font-weight:300; color:var(--muted);">11/30</span>
+        </div>
+        <div style="flex:1; padding:16px 26px 0; display:flex; flex-direction:column; justify-content:center; gap:18px;">
+          <div>
+            <div style="font-size:11px; font-weight:600; color:var(--faint); letter-spacing:.08em;">QUESTION</div>
+            <div style="font-size:17.5px; font-weight:500; color:var(--muted); margin-top:7px; line-height:1.42;">What enzyme catalyzes the rate-limiting step of glycolysis?</div>
+          </div>
+          <div style="height:1px; background:var(--border);"></div>
+          <div>
+            <div style="font-size:11px; font-weight:600; color:var(--cer); letter-spacing:.08em;">ANSWER</div>
+            <div style="font-size:24px; font-weight:600; margin-top:7px; letter-spacing:-.02em; line-height:1.3;">Phosphofructokinase‑1 (PFK‑1)</div>
+            <div style="font-size:14.5px; color:var(--muted); margin-top:9px; line-height:1.5;">Converts F6P → F1,6BP. Allosterically inhibited by ATP and citrate.</div>
+          </div>
+          <div style="font-size:12.5px; color:var(--faint);">⚑ This card is bad</div>
+        </div>
+        <div style="flex:none; padding:0 14px 36px; display:flex; gap:7px;">
+          <div style="flex:1; text-align:center;"><div style="background:#fef2f2; color:var(--again); border-radius:12px; padding:11px 0; font-weight:600; font-size:14px;">Again</div><div class="num" style="font-size:12px; font-weight:300; color:var(--faint); margin-top:4px;">1m</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:#fffbeb; color:var(--hard); border-radius:12px; padding:11px 0; font-weight:600; font-size:14px;">Hard</div><div class="num" style="font-size:12px; font-weight:300; color:var(--faint); margin-top:4px;">2d</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:#f0fdf4; color:var(--good); border-radius:12px; padding:11px 0; font-weight:600; font-size:14px;">Good</div><div class="num" style="font-size:12px; font-weight:300; color:var(--faint); margin-top:4px;">5d</div></div>
+          <div style="flex:1; text-align:center;"><div style="background:var(--cersoft); color:var(--easy); border-radius:12px; padding:11px 0; font-weight:600; font-size:14px;">Easy</div><div class="num" style="font-size:12px; font-weight:300; color:var(--faint); margin-top:4px;">12d</div></div>
+        </div>
+      </div>
+      <div class="homedot"></div>
+    </div>
+    <div class="frame-label"><b>Study · F in Schibsted + Switzer</b> — flat sheet; Switzer 300 for progress + interval previews, Schibsted 600 for the answer.</div>
+  </div>
+
+</div>
+</body>
+</html>
