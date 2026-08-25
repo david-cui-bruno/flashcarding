@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dory Design Language — Typography Exploration</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,800&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&family=Instrument+Sans:wght@400;500;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+  @import url('https://api.fontshare.com/v2/css?f[]=satoshi@400,500,700,900&f[]=general-sans@400,500,600,700&display=swap');
+
+  :root {
+    --bg: #f8fafc; --card: #fff; --border: #e2e8f0; --ink: #0f172a;
+    --muted: #64748b; --faint: #94a3b8; --cerulean: #0284c7;
+    --cerulean-soft: #e0f2fe; --again: #ef4444; --good: #22c55e;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#16181d; color:#e2e8f0; font-family:-apple-system, BlinkMacSystemFont, sans-serif; padding:0 32px 90px; }
+  .pagebar { position:fixed; top:0; left:0; right:0; z-index:50; display:flex; align-items:center; gap:16px; padding:12px 20px; background:rgba(22,24,29,.92); backdrop-filter:blur(12px); border-bottom:1px solid rgba(255,255,255,.08); font-size:14px; }
+  .pagebar .title { font-weight:700; color:#fff; }
+  .lede { max-width:760px; margin:76px auto 10px; text-align:center; font-size:15px; line-height:1.6; color:#cbd5e1; }
+  .lede h1 { color:#fff; font-size:24px; margin-bottom:8px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(370px, 1fr)); gap:28px; max-width:1600px; margin:36px auto 0; }
+
+  .spec { background:var(--bg); border-radius:20px; overflow:hidden; color:var(--ink); display:flex; flex-direction:column; }
+  .spec-head { padding:14px 18px 12px; border-bottom:1px solid var(--border); background:#fff; display:flex; justify-content:space-between; align-items:baseline; }
+  .spec-head .name { font-size:15px; font-weight:700; }
+  .spec-head .vibe { font-size:12px; color:var(--faint); }
+  .spec-body { padding:20px 18px 18px; display:flex; flex-direction:column; gap:14px; }
+
+  .wordmark { font-size:34px; font-weight:800; letter-spacing:-.02em; line-height:1; }
+  .wordmark .fish { color:var(--cerulean); }
+  .headline { font-size:21px; font-weight:700; line-height:1.3; letter-spacing:-.01em; }
+  .sub { font-size:14px; color:var(--muted); line-height:1.5; margin-top:4px; }
+
+  .qa { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px 16px; }
+  .qa .label { font-size:10.5px; font-weight:700; letter-spacing:.08em; color:var(--faint); text-transform:uppercase; }
+  .qa .q { font-size:16.5px; font-weight:650; line-height:1.4; margin-top:4px; }
+  .qa .a { font-size:14.5px; color:var(--muted); line-height:1.45; margin-top:8px; padding-top:8px; border-top:1px dashed var(--border); }
+
+  .grades { display:flex; gap:7px; }
+  .g { flex:1; text-align:center; border-radius:10px; padding:9px 0; font-weight:700; font-size:13px; }
+  .g1 { background:#fef2f2; color:var(--again); }
+  .g2 { background:#fffbeb; color:#f59e0b; }
+  .g3 { background:#f0fdf4; color:var(--good); }
+  .g4 { background:var(--cerulean-soft); color:var(--cerulean); }
+
+  .numbers { display:flex; gap:12px; font-size:13px; color:var(--muted); }
+  .numbers b { font-size:20px; color:var(--ink); font-weight:800; display:block; letter-spacing:-.01em; }
+
+  .note { font-size:12.5px; color:var(--faint); line-height:1.5; }
+</style>
+</head>
+<body>
+<div class="pagebar"><span class="title">Dory Design Language</span><span style="color:#7dd3fc; font-weight:600;">Typography Exploration</span><span style="flex:1"></span><span style="color:#94a3b8;">same content, 10 type directions</span></div>
+
+<div class="lede">
+  <h1>Typography · pick a voice</h1>
+  Same screen fragments in each candidate system. Judge: the wordmark, a study question
+  (the thing you read 100×/day), numbers, and grade buttons. Minimal but modern — the type
+  does the branding so the UI can stay quiet.
+</div>
+
+<div class="grid">
+
+  <!-- 1 System -->
+  <div class="spec" style="font-family:-apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;">
+    <div class="spec-head"><span class="name">1 · SF Pro (system)</span><span class="vibe">current · invisible, iOS-native</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">The baseline. Feels native, zero personality risk, zero distinctiveness.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 2 Inter -->
+  <div class="spec" style="font-family:'Inter', sans-serif;">
+    <div class="spec-head"><span class="name">2 · Inter</span><span class="vibe">the safe modern default</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Linear/Notion energy. Crisp at small sizes, slightly corporate.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 3 Satoshi -->
+  <div class="spec" style="font-family:'Satoshi', sans-serif;">
+    <div class="spec-head"><span class="name">3 · Satoshi</span><span class="vibe">warm grotesque, startup-modern</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-weight:900;">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Rounded-but-serious. Very 2025-consumer-app. Great weight range.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 4 General Sans -->
+  <div class="spec" style="font-family:'General Sans', sans-serif;">
+    <div class="spec-head"><span class="name">4 · General Sans</span><span class="vibe">clean, slightly editorial</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Between Inter and Satoshi. Confident without shouting.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 5 Space Grotesk -->
+  <div class="spec" style="font-family:'Space Grotesk', sans-serif;">
+    <div class="spec-head"><span class="name">5 · Space Grotesk</span><span class="vibe">techy character, quirky terminals</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Distinctive letterforms. Nerdy-cool, risks feeling gimmicky in body text.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 6 DM Sans -->
+  <div class="spec" style="font-family:'DM Sans', sans-serif;">
+    <div class="spec-head"><span class="name">6 · DM Sans</span><span class="vibe">geometric, friendly, soft</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Round and approachable — pairs well with a playful fish brand.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 7 Manrope -->
+  <div class="spec" style="font-family:'Manrope', sans-serif;">
+    <div class="spec-head"><span class="name">7 · Manrope</span><span class="vibe">rounded modern, calm</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Soft geometry with good numerals. Fintech-calm, wellness-adjacent.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 8 Sora -->
+  <div class="spec" style="font-family:'Sora', sans-serif;">
+    <div class="spec-head"><span class="name">8 · Sora</span><span class="vibe">futuristic geometric, wide</span></div>
+    <div class="spec-body">
+      <div class="wordmark">Dory<span class="fish">.</span></div>
+      <div><div class="headline">Turn anything into flashcards.</div><div class="sub">Spacious and precise. Feels like an AI product; wide at body sizes.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b>47</b>due</span><span><b>91%</b>retention</span><span><b>🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 9 Bricolage display + Inter body -->
+  <div class="spec" style="font-family:'Inter', sans-serif;">
+    <div class="spec-head"><span class="name">9 · Bricolage Grotesque + Inter</span><span class="vibe">characterful display, quiet body</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-family:'Bricolage Grotesque'; font-weight:800;">Dory<span class="fish">.</span></div>
+      <div><div class="headline" style="font-family:'Bricolage Grotesque'; font-weight:700;">Turn anything into flashcards.</div><div class="sub">Personality lives in headlines only; study text stays neutral. Best of both.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b style="font-family:'Bricolage Grotesque';">47</b>due</span><span><b style="font-family:'Bricolage Grotesque';">91%</b>retention</span><span><b style="font-family:'Bricolage Grotesque';">🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+  <!-- 10 Fraunces serif accents + Instrument Sans -->
+  <div class="spec" style="font-family:'Instrument Sans', sans-serif;">
+    <div class="spec-head"><span class="name">10 · Fraunces + Instrument Sans</span><span class="vibe">editorial warmth, bookish</span></div>
+    <div class="spec-body">
+      <div class="wordmark" style="font-family:'Fraunces'; font-weight:700; letter-spacing:0;">Dory<span class="fish">.</span></div>
+      <div><div class="headline" style="font-family:'Fraunces'; font-weight:600;">Turn anything into flashcards.</div><div class="sub">Serif = learning heritage, sans = modern UI. Anti-Anki: warm, not clinical. Question text could even be Newsreader for a "reading" feel.</div></div>
+      <div class="qa"><div class="label">Question</div><div class="q" style="font-family:'Newsreader'; font-weight:500; font-size:17.5px;">What enzyme catalyzes the rate-limiting step of glycolysis?</div><div class="a" style="font-family:'Newsreader';">Phosphofructokinase-1 (PFK-1) — F6P → F1,6BP.</div></div>
+      <div class="numbers"><span><b style="font-family:'Fraunces';">47</b>due</span><span><b style="font-family:'Fraunces';">91%</b>retention</span><span><b style="font-family:'Fraunces';">🔥 13</b>streak</span></div>
+      <div class="grades"><div class="g g1">Again</div><div class="g g2">Hard</div><div class="g g3">Good</div><div class="g g4">Easy</div></div>
+    </div>
+  </div>
+
+</div>
+
+<div class="lede" style="margin-top:44px;">
+  <div class="note" style="font-size:14px; color:#94a3b8; max-width:640px; margin:0 auto;">
+    My take: <b style="color:#e2e8f0;">3 (Satoshi)</b> or <b style="color:#e2e8f0;">9 (Bricolage + Inter)</b> for
+    "minimal but modern" — 3 if you want one quiet voice everywhere, 9 if you want headlines with personality.
+    <b style="color:#e2e8f0;">10</b> is the bold anti-Anki move: serifs make it feel like a beautiful study tool, not software.
+    Next round: layout variations with the winner.
+  </div>
+</div>
+</body>
+</html>

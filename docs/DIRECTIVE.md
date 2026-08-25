@@ -7,8 +7,8 @@ Update this file as items complete._
 ## Mission
 
 Ship Dory to the iOS App Store as "Anki with AI, cheaper than AnkiMobile."
-Free tier: unlimited study, FSRS, and Anki `.apkg` import. Pro ($3.99/mo or
-$29.99/yr): AI card generation. Do not drift from the card-quality thesis
+Free tier: unlimited study, FSRS, and Anki `.apkg` import. Pro ($2.99/mo or
+$19.99/yr): AI card generation. Do not drift from the card-quality thesis
 (docs/CARD-QUALITY.md is the keystone).
 
 ## Current state (verified 2026-08-23)
@@ -35,7 +35,7 @@ $29.99/yr): AI card generation. Do not drift from the card-quality thesis
      flow, study screens per mockups — rendered by the web app under the
      `.native-app` class, served to the shell
 1. **App Store Connect subscriptions** (app record + TestFlight already exist)
-   - Create auto-renewable subscription group "Dory Pro": $3.99/mo + $29.99/yr
+   - Create auto-renewable subscription group "Dory Pro": $2.99/mo + $19.99/yr
    - Enroll in the Small Business Program (15% cut)
 2. **RevenueCat wiring**
    - Create RevenueCat project, entitlement id `pro`, attach both products
