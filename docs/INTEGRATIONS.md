@@ -14,6 +14,11 @@ with latest Anki stable); Quizlet's official API is discontinued (confirmed
 
 ## 1. AnkiConnect live sync (flagship "Link your Anki")
 
+_Local ground truth (2026-08-25): the owner's Mac has Anki.app installed with
+profile "User 1" and two add-ons (Quizlet importer, CrowdAnki) but NOT yet
+AnkiConnect — the sync helper's onboarding must include a one-click "install
+AnkiConnect" step (add-on code 2055492159)._
+
 AnkiConnect is the de-facto standard local HTTP API plugin (used by Yomichan
 etc.), running at `localhost:8765` next to desktop Anki.
 
@@ -39,14 +44,22 @@ Dory sync helper  ──►  Dory API (learndory.com)
 
 ## 2. Quizlet importer (pragmatic)
 
+_Empirically verified 2026-08-25: a plain server-side fetch of a public
+Quizlet set page returns **HTTP 403** with bot-challenge markers, so
+share-link parsing cannot be the primary path. Export-paste is primary;
+link-paste is best-effort only._
+
 - Quizlet's own **export** feature emits tab/comma-separated text per set.
   Build `apps: paste Quizlet export` mode in the existing Import tab
   (parser: split on tab or comma, rows = term/definition).
 - **Share-link paste**: fetch public set pages server-side where accessible
-  and parse embedded JSON; degrade gracefully to "use export" when blocked.
-  Treat as best-effort; never require it.
+  and parse embedded JSON; degrade gracefully to "use export" when blocked
+  (which is the common case per the 403 above). Never require it.
 - Marketing copy: "Bring your Quizlet sets" (true via export), not "link
   your Quizlet account" (impossible legitimately).
+- Prior art worth mining: the owner's local Anki install already has the
+  "Improved Quizlet to Anki 21 Importer" add-on — its parsing approach is a
+  useful reference for our importer.
 
 ## Sequencing
 
